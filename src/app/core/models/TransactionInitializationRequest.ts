@@ -10,7 +10,7 @@ export const profileOptions: Record<Profile, ProfileOptions> = {
     endpoint: 'haip-vp://',
   },
   openid4vp: {
-    endpoint: 'openid4vp://',
+    endpoint: 'eudi-openid4vp://',
   },
 };
 
@@ -20,7 +20,7 @@ export type TransactionInitializationRequest = {
   dcql_query: DCQL;
   issuer_chain?: string;
   profile: Profile;
-  authorization_request_uri: string;
+  authorization_request_scheme: string;
 };
 
 export type PresentationQuery = DCQL;

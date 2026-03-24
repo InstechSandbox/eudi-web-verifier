@@ -47,6 +47,7 @@ export class QrCodeComponent implements OnInit, OnDestroy {
   stopPlay$ = new ReplaySubject(1);
 
   isCrossDevice = true;
+  showQrCode = false;
   transaction!: ActiveTransaction;
 
   deepLinkTxt!: string;
@@ -79,6 +80,7 @@ export class QrCodeComponent implements OnInit, OnDestroy {
       this.navigateService.goHome();
     } else {
       this.deepLinkTxt = this.transaction.initialized_transaction.authorization_request_uri;
+      this.showQrCode = !!this.deepLinkTxt;
       if (this.isCrossDevice) {
         this.pollingRequest(this.transaction.initialized_transaction.transaction_id);
       }

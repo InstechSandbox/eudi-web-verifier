@@ -47,7 +47,7 @@ export class DCQLService {
       request_uri_method: selectedRequestUriMethod,
       issuer_chain: issuerChain,
       profile: selectedProfile,
-      authorization_request_uri: authorizationRequestUri
+      authorization_request_scheme: authorizationRequestUri.replace(/:\/\/$/, '')
     };
   }
 

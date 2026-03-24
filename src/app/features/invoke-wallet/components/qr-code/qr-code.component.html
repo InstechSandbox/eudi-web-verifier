@@ -2,7 +2,7 @@
   <div>
     <mat-card class="example-card">
       <mat-card-content>
-        <p *ngIf="isCrossDevice" style="text-align: center">
+        <p *ngIf="showQrCode" style="text-align: center">
           <qrcode
             [qrdata]="deepLinkTxt"
             [allowEmptyString]="false"
@@ -17,9 +17,9 @@
           />
         </p>
 
-        <mat-divider *ngIf="isCrossDevice" />
+        <mat-divider *ngIf="showQrCode" />
         <div class="below-qr-code">
-          <span *ngIf="isCrossDevice"
+          <span *ngIf="showQrCode"
             >Scan the
             <a
               [href]="qrCodeDownloadLink"
@@ -29,7 +29,7 @@
             >
             above with your phone
           </span>
-          <p *ngIf="isCrossDevice">- OR -</p>
+          <p *ngIf="showQrCode">- OR -</p>
           <a mat-raised-button class="authorize" [href]="deepLinkTxt"
             >OPEN WITH YOUR WALLET</a
           >
