@@ -11,6 +11,7 @@ const mockResponseData: InitializedTransaction = {
   request_uri: 'request_uri',
   request_uri_method: 'get',
   transaction_id: 'transaction_id',
+  authorization_request_uri: 'eudi-openid4vp://client_id?client_id=client_id&request_uri=request_uri&request_uri_method=get',
 };
 
 describe('VerifierEndpointService', () => {

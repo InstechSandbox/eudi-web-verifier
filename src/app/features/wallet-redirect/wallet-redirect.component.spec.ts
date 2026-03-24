@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { WalletRedirectComponent } from './wallet-redirect.component';
-import { WalletResponse } from '@core/models/WalletResponse';
+import { ConcludedTransaction } from '@core/models/ConcludedTransaction';
 import { provideHttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
 
@@ -14,9 +14,17 @@ describe('WalletRedirectComponent', () => {
       'ToasterService',
       ['error', 'success']
     );
-    const walletResponse: WalletResponse = {
-      id_token: 'id_token',
-      vp_token: {'query_0': 'vp_token',},
+    const concludedTransaction: ConcludedTransaction = {
+      transactionId: 'transaction_id',
+      nonce: 'nonce',
+      presentationQuery: {
+        credentials: [],
+        credential_sets: [],
+      },
+      walletResponse: {
+        id_token: 'id_token',
+        vp_token: { query_0: ['vp_token'] },
+      },
     };
     await TestBed.configureTestingModule({
       imports: [WalletRedirectComponent],
@@ -24,7 +32,7 @@ describe('WalletRedirectComponent', () => {
         {
           provide: ActivatedRoute,
           useValue: {
-            snapshot: { data: walletResponse },
+            snapshot: { data: { data: concludedTransaction } },
           },
         },
         { provide: ToastrService, useValue: toastrService },

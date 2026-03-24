@@ -165,6 +165,10 @@ export class HomeComponent implements OnDestroy {
   }
 
   handleProfileChangedEvent($event: string) {
+    if (!($event in profileOptions)) {
+      return;
+    }
+
     this.selectedProfile = $event as Profile;
     this.authorizationSchemeControl.setValue(profileOptions[this.selectedProfile].endpoint);
     this.authorizationRequestUri = profileOptions[this.selectedProfile].endpoint;
