@@ -53,6 +53,14 @@ You can access the application at [http://localhost:4200](http://localhost:4200)
 
 Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
 
+## Validation Smoke Test
+
+The repository includes [validate_local_build.sh](validate_local_build.sh) for local validation.
+
+After the production build and unit tests succeed, the smoke phase starts a disposable Angular development server on a temporary local port and verifies that the application shell answers over HTTP.
+
+If the smoke test fails, the script exits non-zero, prints the temporary server log, and tears down the disposable verifier UI process and any listener left on the smoke-test port.
+
 Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
