@@ -79,7 +79,7 @@ export class QrCodeComponent implements OnInit, OnDestroy {
     if (!this.transaction) {
       this.navigateService.goHome();
     } else {
-      this.deepLinkTxt = this.transaction.initialized_transaction.authorization_request_uri;
+      this.deepLinkTxt = this.transaction.initialized_transaction.authorization_request_uri ?? '';
       this.showQrCode = !!this.deepLinkTxt;
       if (this.isCrossDevice) {
         this.pollingRequest(this.transaction.initialized_transaction.transaction_id);

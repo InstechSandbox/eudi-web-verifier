@@ -1,5 +1,5 @@
 export const environment = {
-	apiUrl: 'http://localhost:4200',
+	apiUrl: '',
 	appName: 'Verifier',
 	openid4vpDraft: '1.0',
 };

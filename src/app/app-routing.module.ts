@@ -6,7 +6,35 @@ import { VerifierEndpointService } from '@core/services/verifier-endpoint.servic
 import { WalletRedirectComponent } from './features/wallet-redirect/wallet-redirect.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: '', redirectTo: 'irish-life', pathMatch: 'full' },
+  {
+    path: 'irish-life',
+    loadComponent: () =>
+      import('@features/irish-life/irish-life-journey-selector.component').then(
+        (c) => c.IrishLifeJourneySelectorComponent
+      ),
+  },
+  {
+    path: 'irish-life/new-business/agent',
+    loadComponent: () =>
+      import('@features/irish-life/new-business-agent.component').then(
+        (c) => c.NewBusinessAgentComponent
+      ),
+  },
+  {
+    path: 'irish-life/new-business/customer',
+    loadComponent: () =>
+      import('@features/irish-life/new-business-customer-entry.component').then(
+        (c) => c.NewBusinessCustomerEntryComponent
+      ),
+  },
+  {
+    path: 'irish-life/new-business/customer/:caseId',
+    loadComponent: () =>
+      import('@features/irish-life/new-business-customer.component').then(
+        (c) => c.NewBusinessCustomerComponent
+      ),
+  },
   {
     path: 'home',
     loadComponent: () =>

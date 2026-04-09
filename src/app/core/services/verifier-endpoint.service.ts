@@ -66,6 +66,7 @@ export class VerifierEndpointService {
     const authority = this.authorizationRequestAuthority(response);
     const query = new URLSearchParams();
     query.set('client_id', response.client_id);
+    query.set('response_type', 'vp_token');
     if (response.request) {
       query.set('request', response.request);
     }

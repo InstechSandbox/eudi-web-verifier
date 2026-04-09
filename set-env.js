@@ -3,9 +3,10 @@ const fs = require('fs');
 const targetPath = './src/environments/environment.ts';
 // Load node modules
 require('dotenv').config();
+const apiUrl = (process.env.DOMAIN_NAME || '').replace(/\/$/, '');
 // `environment.ts` file structure
 const envConfigFile = `export const environment = {
-    apiUrl: '${process.env.DOMAIN_NAME}',
+	apiUrl: '${apiUrl}',
     appName: '${process.env.APP_NAME}',
 	openid4vpDraft: '${process.env.OPENID4VP_DRAFT}',
 };`;
