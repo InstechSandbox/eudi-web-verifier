@@ -5,6 +5,7 @@
 - This repo owns the verifier web UI and is a primary delivery surface for the Irish Life proof of concept.
 - Keep UI journey changes aligned with verifier endpoint contracts and protocol expectations.
 - When verifier UI behaviour, environment assumptions, acceptance flow design, or smoke coverage changes, update `project-docs` in the same task.
+- Default Git flow in this workspace is local `wip/<stream>` commits promoted directly with `git push origin HEAD:main`; do not publish remote `wip/<stream>` branches unless explicitly requested.
 
 ## Local Checks
 
