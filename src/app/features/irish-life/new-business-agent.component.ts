@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -43,22 +45,22 @@ import {
 	],
 	template: `
     <vc-wallet-layout>
-      <div body class="page">
-        <section class="hero bg-panel">
-          <p class="eyebrow">New Business</p>
+      <div body class="page irish-life-theme irish-life-page">
+        <section class="hero bg-panel irish-life-hero">
+          <p class="eyebrow irish-life-eyebrow">New Business</p>
           <div class="hero-headline">
             <div>
-              <h1>Agent orchestration workspace</h1>
+              <h1 class="irish-life-display">Agent orchestration workspace</h1>
               <p>
                 Create the case, issue the wallet invite, and track the proof journey to completion.
               </p>
             </div>
-            <a routerLink="/irish-life" class="ghost-link">Back to journey selector</a>
+            <a routerLink="/irish-life" class="ghost-link irish-life-ghost-link">Back to journey selector</a>
           </div>
         </section>
 
         <section class="content-grid">
-          <mat-card class="panel">
+          <mat-card class="panel irish-life-panel">
             <mat-card-header>
               <mat-card-title>New Business case</mat-card-title>
               <mat-card-subtitle>
@@ -112,7 +114,7 @@ import {
                 <button
                   mat-flat-button
                   color="primary"
-                  class="brand-button"
+                  class="brand-button irish-life-brand-button"
                   type="button"
                   (click)="createAndSendInvite()"
                   [disabled]="form.invalid || busy"
@@ -121,7 +123,7 @@ import {
                 </button>
                 <button
                   mat-stroked-button
-                  class="secondary-button"
+                  class="secondary-button irish-life-secondary-button"
                   type="button"
                   (click)="refreshCase()"
                   [disabled]="!caseSummary || busy"
@@ -138,14 +140,14 @@ import {
             </mat-card-content>
           </mat-card>
 
-          <mat-card class="panel" *ngIf="caseSummary as currentCase">
+          <mat-card class="panel irish-life-panel" *ngIf="caseSummary as currentCase">
             <mat-card-header>
               <mat-card-title>{{ currentCase.policyReference }}</mat-card-title>
               <mat-card-subtitle>Current state: {{ currentCase.currentStatus }}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-              <div class="status-list">
-                <div class="status-item" *ngFor="let status of currentCase.statuses">
+              <div class="status-list irish-life-status-list">
+                <div class="status-item irish-life-status-item" *ngFor="let status of currentCase.statuses">
                   <div>
                     <strong>{{ status.label }}</strong>
                     <p>{{ status.code }}</p>
@@ -157,7 +159,7 @@ import {
               <mat-divider></mat-divider>
 
               <div class="detail-block">
-                <p class="detail-label">Customer proof page</p>
+                <p class="detail-label irish-life-detail-label">Customer proof page</p>
                 <a [href]="currentCase.customerPortalUrl" target="_blank" rel="noreferrer">
                   {{ currentCase.customerPortalUrl }}
                 </a>
@@ -174,11 +176,11 @@ import {
 
               <div class="detail-grid">
                 <div>
-                  <p class="detail-label">Invite email</p>
+                  <p class="detail-label irish-life-detail-label">Invite email</p>
                   <strong>{{ currentCase.inviteEmailSent ? 'Sent' : 'Not sent' }}</strong>
                 </div>
                 <div>
-                  <p class="detail-label">Completion email</p>
+                  <p class="detail-label irish-life-detail-label">Completion email</p>
                   <strong>{{ currentCase.completionEmailSent ? 'Sent' : 'Pending' }}</strong>
                 </div>
               </div>
@@ -190,8 +192,8 @@ import {
                     <li *ngFor="let reason of failureReasonsFromSummary(currentCase)">{{ reason }}</li>
                   </ul>
 
-                  <div class="evidence-panel" *ngIf="validationDetailsFromSummary(currentCase).length > 0">
-                    <p class="detail-label">Verifier comparison</p>
+                  <div class="evidence-panel irish-life-evidence-panel" *ngIf="validationDetailsFromSummary(currentCase).length > 0">
+                    <p class="detail-label irish-life-detail-label">Verifier comparison</p>
                     <div class="evidence-item" *ngFor="let detail of validationDetailsFromSummary(currentCase)">
                       <p class="evidence-name">{{ detail.label }}</p>
                       <p><strong>Application:</strong> {{ detail.expected }}</p>
@@ -215,34 +217,7 @@ import {
   `,
 	styles: [
 		`
-      :host {
-        --irish-life-navy: #2457a6;
-        --irish-life-blue: #4f86d6;
-        --irish-life-sky: #e5effb;
-        --irish-life-paper: #f8fbff;
-        --irish-life-line: #d2def1;
-        --irish-life-ink: #18345f;
-        display: block;
-      }
-
-      .page {
-        padding: 1.25rem 0 2rem;
-      }
-
-      .hero {
-        background: linear-gradient(160deg, #5d92dd, var(--irish-life-navy) 76%);
-        color: white;
-        margin-bottom: 1.2rem;
-      }
-
-      .eyebrow,
-      .detail-label {
-        margin: 0 0 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        font-size: 0.7rem;
-        font-weight: 700;
-      }
+      :host { display: block; }
 
       .hero-headline {
         display: flex;
@@ -251,46 +226,9 @@ import {
         gap: 1rem;
       }
 
-      h1 {
-        font-family: Georgia, 'Times New Roman', serif;
-        font-size: clamp(2rem, 4vw, 3rem);
-        margin: 0 0 0.5rem;
-      }
-
-      .ghost-link {
-        align-self: flex-start;
-        color: white;
-        text-decoration: none;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.32);
-        border-radius: 999px;
-        padding: 0.75rem 1rem;
-      }
-
       .content-grid {
         display: grid;
         gap: 1rem;
-      }
-
-      .panel {
-        border-radius: 20px;
-        border: 1px solid rgba(36, 87, 166, 0.08);
-        box-shadow: 0 18px 44px rgba(24, 52, 95, 0.09);
-      }
-
-      .brand-button {
-        background: var(--irish-life-blue);
-        color: white;
-      }
-
-      .brand-button[disabled] {
-        background: #d6ddea;
-        color: #67748f;
-      }
-
-      .secondary-button {
-        border-color: var(--irish-life-line);
-        color: var(--irish-life-navy);
       }
 
       .form-grid {
@@ -319,19 +257,7 @@ import {
         font-size: 0.95rem;
       }
 
-      .status-list {
-        display: grid;
-        gap: 0.8rem;
-        margin-bottom: 1rem;
-      }
-
-      .status-item {
-        display: flex;
-        justify-content: space-between;
-        gap: 0.75rem;
-        padding: 0.85rem 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-      }
+      .status-list { margin-bottom: 1rem; }
 
       .status-item p,
       .detail-block p {
@@ -375,14 +301,7 @@ import {
         padding-left: 1.2rem;
       }
 
-      .evidence-panel {
-        margin-top: 1rem;
-        padding: 1rem;
-        border-radius: 16px;
-        background: #f1f6fd;
-        border: 1px solid var(--irish-life-line);
-        color: #18254a;
-      }
+      .evidence-panel { margin-top: 1rem; }
 
       .evidence-item + .evidence-item {
         margin-top: 0.85rem;
@@ -529,7 +448,10 @@ export class NewBusinessAgentComponent implements OnDestroy {
 	private caseErrorMessage (error: any): string {
 		if (error?.name === 'TimeoutError') {
 			return this.lastBusyStep === 'invite' ?
-				'Sending the invite took too long. Refresh the case to see whether the backend already created the invite, then try again if needed.' :
+				(
+					'Sending the invite took too long. Refresh the case to see whether the backend already created ' +
+          'the invite, then try again if needed.'
+				) :
 				'Creating the case took too long. Refresh the page and try again.';
 		}
 
@@ -567,7 +489,7 @@ export class NewBusinessAgentComponent implements OnDestroy {
 	}
 
 	protected failureReasonsFromSummary (summary: NewBusinessCaseSummary): string[] {
-    return buildFailureReasons(summary);
+		return buildFailureReasons(summary);
 	}
 
 	protected validationDetailsFromSummary (summary: NewBusinessCaseSummary) {

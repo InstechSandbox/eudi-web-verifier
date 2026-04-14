@@ -1,7 +1,13 @@
 import {
+	ExistingBusinessCaseSummary,
+	IrishLifeClaimsSnapshot,
 	NewBusinessCaseSummary,
-	NewBusinessClaimsSnapshot,
 } from '@core/services/irish-life-case.service';
+
+type IrishLifeCaseSummaryLike = Pick<
+	NewBusinessCaseSummary | ExistingBusinessCaseSummary,
+	'customerGivenName' | 'customerFamilyName' | 'customerBirthDate' | 'customerAddress' | 'failureReason' | 'validation'
+>;
 
 export type ValidationDetail = {
   label: string;
@@ -17,7 +23,7 @@ type ValidationFieldConfig = {
 		| 'matchedBirthDate'
 		| 'matchedAddress';
 	expected: keyof Pick<NewBusinessCaseSummary, 'customerGivenName' | 'customerFamilyName' | 'customerBirthDate' | 'customerAddress'>;
-	actual: keyof Pick<NewBusinessClaimsSnapshot, 'givenName' | 'familyName' | 'birthDate' | 'address'>;
+	actual: keyof Pick<IrishLifeClaimsSnapshot, 'givenName' | 'familyName' | 'birthDate' | 'address'>;
 	reason: string;
 };
 
@@ -54,7 +60,7 @@ const VALIDATION_FIELDS: ValidationFieldConfig[] = [
 	},
 ];
 
-export function buildValidationDetails (summary: NewBusinessCaseSummary): ValidationDetail[] {
+export function buildValidationDetails (summary: IrishLifeCaseSummaryLike): ValidationDetail[] {
 	const {validation} = summary;
 	if (!validation) {
 		return [];
@@ -78,7 +84,7 @@ export function buildValidationDetails (summary: NewBusinessCaseSummary): Valida
 	];
 }
 
-export function buildFailureReasons (summary: NewBusinessCaseSummary): string[] {
+export function buildFailureReasons (summary: IrishLifeCaseSummaryLike): string[] {
 	const {failureReason, validation} = summary;
 	if (!validation) {
 		return failureReason ? [failureReason] : [];
@@ -95,13 +101,13 @@ export function buildFailureReasons (summary: NewBusinessCaseSummary): string[] 
 	return reasons.length > 0 ? reasons : failureReason ? [failureReason] : [];
 }
 
-export function disclosedClaimPathsFromSummary (summary: NewBusinessCaseSummary): string[] {
+export function disclosedClaimPathsFromSummary (summary: IrishLifeCaseSummaryLike): string[] {
 	return snapshotStringArray(summary.validation?.claimsSnapshot, 'disclosedClaimPaths');
 }
 
 function snapshotValue (
-	snapshot: NewBusinessClaimsSnapshot | undefined,
-	key: keyof NewBusinessClaimsSnapshot
+	snapshot: IrishLifeClaimsSnapshot | undefined,
+	key: keyof IrishLifeClaimsSnapshot
 ): string {
 	if (!snapshot) {
 		return '';
@@ -112,8 +118,8 @@ function snapshotValue (
 }
 
 function snapshotStringArray (
-	snapshot: NewBusinessClaimsSnapshot | undefined,
-	key: keyof NewBusinessClaimsSnapshot
+	snapshot: IrishLifeClaimsSnapshot | undefined,
+	key: keyof IrishLifeClaimsSnapshot
 ): string[] {
 	const value = snapshot?.[key];
 	if (!Array.isArray(value)) {
@@ -133,7 +139,7 @@ function displayActual (value: string): string {
 
 function buildExpiryDetail (
 	credentialExpired: boolean | undefined,
-	snapshot: NewBusinessClaimsSnapshot | undefined
+	snapshot: IrishLifeClaimsSnapshot | undefined
 ): ValidationDetail[] {
 	if (!credentialExpired) {
 		return [];

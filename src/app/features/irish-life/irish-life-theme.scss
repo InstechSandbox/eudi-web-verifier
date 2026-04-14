@@ -1,0 +1,132 @@
+.irish-life-theme {
+  --irish-life-navy: #2457a6;
+  --irish-life-blue: #4f86d6;
+  --irish-life-sky: #e5effb;
+  --irish-life-paper: #f8fbff;
+  --irish-life-line: #d2def1;
+  --irish-life-ink: #18345f;
+}
+
+.irish-life-page {
+  padding: 1.25rem 0 2rem;
+}
+
+.irish-life-hero {
+  background:
+    radial-gradient(circle at top right, rgba(191, 215, 247, 0.45), transparent 32%),
+    linear-gradient(150deg, #5d92dd, var(--irish-life-navy) 78%);
+  color: white;
+  margin-bottom: 1.2rem;
+}
+
+.irish-life-panel {
+  border-radius: 20px;
+  border: 1px solid rgba(36, 87, 166, 0.08);
+  box-shadow: 0 18px 44px rgba(24, 52, 95, 0.09);
+}
+
+.irish-life-eyebrow,
+.irish-life-detail-label {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.irish-life-display,
+.irish-life-heading {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.irish-life-display {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.irish-life-heading {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.irish-life-ghost-link {
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.irish-life-hero .irish-life-ghost-link {
+  align-self: flex-start;
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+}
+
+.irish-life-panel .irish-life-ghost-link,
+.irish-life-page .irish-life-ghost-link.inline-link {
+  color: var(--irish-life-navy);
+}
+
+.irish-life-brand-button {
+  background: var(--irish-life-blue);
+  color: white;
+}
+
+.irish-life-brand-button[disabled] {
+  background: #d6ddea;
+  color: #67748f;
+}
+
+.irish-life-secondary-button {
+  border-color: var(--irish-life-line);
+  color: var(--irish-life-navy);
+}
+
+.irish-life-evidence-panel {
+  padding: 1rem;
+  border-radius: 16px;
+  background: #f1f6fd;
+  border: 1px solid var(--irish-life-line);
+  color: #18254a;
+}
+
+.irish-life-status-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.irish-life-status-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.irish-life-notification-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.irish-life-notification-item {
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  background: linear-gradient(180deg, #f1f6fd, var(--irish-life-paper));
+  border: 1px solid var(--irish-life-line);
+}
+
+.irish-life-result-banner {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 16px;
+}
+
+.irish-life-result-banner.success {
+  background: #ecf7f0;
+  color: #165b36;
+}
+
+.irish-life-result-banner.failure {
+  background: #fff1f2;
+  color: #991b1b;
+}

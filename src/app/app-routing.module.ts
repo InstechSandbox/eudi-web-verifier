@@ -6,74 +6,95 @@ import { VerifierEndpointService } from '@core/services/verifier-endpoint.servic
 import { WalletRedirectComponent } from './features/wallet-redirect/wallet-redirect.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'irish-life', pathMatch: 'full' },
-  {
-    path: 'irish-life',
-    loadComponent: () =>
-      import('@features/irish-life/irish-life-journey-selector.component').then(
-        (c) => c.IrishLifeJourneySelectorComponent
-      ),
-  },
-  {
-    path: 'irish-life/new-business/agent',
-    loadComponent: () =>
-      import('@features/irish-life/new-business-agent.component').then(
-        (c) => c.NewBusinessAgentComponent
-      ),
-  },
-  {
-    path: 'irish-life/new-business/customer',
-    loadComponent: () =>
-      import('@features/irish-life/new-business-customer-entry.component').then(
-        (c) => c.NewBusinessCustomerEntryComponent
-      ),
-  },
-  {
-    path: 'irish-life/new-business/customer/:caseId',
-    loadComponent: () =>
-      import('@features/irish-life/new-business-customer.component').then(
-        (c) => c.NewBusinessCustomerComponent
-      ),
-  },
-  {
-    path: 'home',
-    loadComponent: () =>
-      import(
-        '@features/presentation-request-preparation/home/home.component'
-      ).then((c) => c.HomeComponent),
-  },
-  {
-    path: 'custom-request',
-    loadChildren: () =>
-      import(
-        '@features/custom-presentation-request/custom-presentation-request.module'
-      ).then((m) => m.CustomPresentationRequestModule),
-  },
-  {
-    path: 'invoke-wallet',
-    loadChildren: () =>
-      import('@features/invoke-wallet/invoke-wallet.module').then(
-        (m) => m.InvokeWalletModule
-      ),
-  },
-  {
-    path: 'get-wallet-code',
-    component: WalletRedirectComponent,
-    providers: [VerifierEndpointService, NavigateService],
-    resolve: {
-      data: WalletRedirectResolver,
-    },
-  },
+	{ path: '', redirectTo: 'irish-life', pathMatch: 'full' },
+	{
+		path: 'irish-life',
+		loadComponent: () =>
+			import('@features/irish-life/irish-life-journey-selector.component').then(
+				(c) => c.IrishLifeJourneySelectorComponent
+			),
+	},
+	{
+		path: 'irish-life/new-business/agent',
+		loadComponent: () =>
+			import('@features/irish-life/new-business-agent.component').then(
+				(c) => c.NewBusinessAgentComponent
+			),
+	},
+	{
+		path: 'irish-life/new-business/customer',
+		loadComponent: () =>
+			import('@features/irish-life/new-business-customer-entry.component').then(
+				(c) => c.NewBusinessCustomerEntryComponent
+			),
+	},
+	{
+		path: 'irish-life/new-business/customer/:caseId',
+		loadComponent: () =>
+			import('@features/irish-life/new-business-customer.component').then(
+				(c) => c.NewBusinessCustomerComponent
+			),
+	},
+	{
+		path: 'irish-life/existing-business/agent',
+		loadComponent: () =>
+			import('@features/irish-life/existing-business-agent.component').then(
+				(c) => c.ExistingBusinessAgentComponent
+			),
+	},
+	{
+		path: 'irish-life/existing-business/customer',
+		loadComponent: () =>
+			import('@features/irish-life/existing-business-customer-entry.component').then(
+				(c) => c.ExistingBusinessCustomerEntryComponent
+			),
+	},
+	{
+		path: 'irish-life/existing-business/customer/:caseId',
+		loadComponent: () =>
+			import('@features/irish-life/existing-business-customer.component').then(
+				(c) => c.ExistingBusinessCustomerComponent
+			),
+	},
+	{
+		path: 'home',
+		loadComponent: () =>
+			import(
+				'@features/presentation-request-preparation/home/home.component'
+			).then((c) => c.HomeComponent),
+	},
+	{
+		path: 'custom-request',
+		loadChildren: () =>
+			import(
+				'@features/custom-presentation-request/custom-presentation-request.module'
+			).then((m) => m.CustomPresentationRequestModule),
+	},
+	{
+		path: 'invoke-wallet',
+		loadChildren: () =>
+			import('@features/invoke-wallet/invoke-wallet.module').then(
+				(m) => m.InvokeWalletModule
+			),
+	},
+	{
+		path: 'get-wallet-code',
+		component: WalletRedirectComponent,
+		providers: [VerifierEndpointService, NavigateService],
+		resolve: {
+			data: WalletRedirectResolver,
+		},
+	},
 ];
 
 @NgModule({
-  imports: [
-    RouterModule.forRoot(routes, {
-      useHash: false,
-      paramsInheritanceStrategy: 'always',
-      preloadingStrategy: PreloadAllModules,
-    }),
-  ],
-  exports: [RouterModule],
+	imports: [
+		RouterModule.forRoot(routes, {
+			useHash: false,
+			paramsInheritanceStrategy: 'always',
+			preloadingStrategy: PreloadAllModules,
+		}),
+	],
+	exports: [RouterModule],
 })
 export class AppRoutingModule {}

@@ -9,32 +9,32 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 @Component({
-  selector: 'vc-new-business-customer-entry',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterLink,
-    WalletLayoutComponent,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
-  template: `
+	selector: 'vc-new-business-customer-entry',
+	standalone: true,
+	imports: [
+		CommonModule,
+		ReactiveFormsModule,
+		RouterLink,
+		WalletLayoutComponent,
+		MatButtonModule,
+		MatCardModule,
+		MatFormFieldModule,
+		MatInputModule,
+	],
+	template: `
     <vc-wallet-layout>
-      <div body class="page">
-        <mat-card class="panel bg-panel">
-          <p class="eyebrow">Customer entry</p>
-          <h1>Open your New Business proof page</h1>
+      <div body class="page irish-life-theme irish-life-page">
+        <mat-card class="panel bg-panel irish-life-panel">
+          <p class="eyebrow irish-life-eyebrow">Customer entry</p>
+          <h1 class="irish-life-display">Open your New Business proof page</h1>
           <p>
             If you received an Irish Life email, use the direct link there. Otherwise enter the
-            case reference shared with you.
+            case ID from that link or from the agent workspace.
           </p>
 
           <form [formGroup]="form" class="entry-form" (ngSubmit)="openCase()">
             <mat-form-field appearance="outline">
-              <mat-label>Case reference</mat-label>
+              <mat-label>Case ID</mat-label>
               <input matInput formControlName="caseId" />
             </mat-form-field>
 
@@ -42,15 +42,15 @@ import { MatInputModule } from '@angular/material/input';
               <button mat-flat-button color="primary" class="brand-button" type="submit" [disabled]="form.invalid">
                 Continue to proof sharing
               </button>
-              <a routerLink="/irish-life" class="ghost-link">Back to selector</a>
+              <a routerLink="/irish-life" class="ghost-link irish-life-ghost-link inline-link">Back to selector</a>
             </div>
           </form>
         </mat-card>
       </div>
     </vc-wallet-layout>
   `,
-  styles: [
-    `
+	styles: [
+		`
       :host {
         --irish-life-navy: #2457a6;
         --irish-life-blue: #4f86d6;
@@ -99,24 +99,24 @@ import { MatInputModule } from '@angular/material/input';
         font-weight: 700;
       }
     `,
-  ],
+	],
 })
 export class NewBusinessCustomerEntryComponent {
-  readonly form = this.formBuilder.nonNullable.group({
-    caseId: ['', Validators.required],
-  });
+	readonly form = this.formBuilder.nonNullable.group({
+		caseId: ['', Validators.required],
+	});
 
-  constructor(
+	constructor (
     private readonly formBuilder: FormBuilder,
     private readonly router: Router
-  ) {}
+	) {}
 
-  openCase(): void {
-    const caseId = this.form.controls.caseId.value.trim();
-    if (!caseId) {
-      return;
-    }
+	openCase (): void {
+		const caseId = this.form.controls.caseId.value.trim();
+		if (!caseId) {
+			return;
+		}
 
-    void this.router.navigate(['/irish-life/new-business/customer', caseId]);
-  }
+		void this.router.navigate(['/irish-life/new-business/customer', caseId]);
+	}
 }

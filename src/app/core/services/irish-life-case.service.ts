@@ -3,7 +3,36 @@ import { HttpService } from '@core/network/http/http.service';
 import { Observable } from 'rxjs';
 import { ActiveTransaction } from '@core/models/ActiveTransaction';
 
-const BASE_ENDPOINT = 'ui/irish-life/new-business/cases';
+const NEW_BUSINESS_BASE_ENDPOINT = 'ui/irish-life/new-business/cases';
+const EXISTING_BUSINESS_BASE_ENDPOINT = 'ui/irish-life/existing-business/cases';
+
+export type IrishLifeCasePartyDetails = {
+  customerGivenName: string;
+  customerFamilyName: string;
+  customerEmail: string;
+  customerBirthDate: string;
+  customerAddress: string;
+};
+
+export type IrishLifeClaimsSnapshot = {
+  givenName?: unknown;
+  familyName?: unknown;
+  birthDate?: unknown;
+  address?: unknown;
+  expiry?: unknown;
+  disclosedClaimPaths?: unknown;
+};
+
+export type IrishLifeValidationSummary = {
+  matchedGivenName?: boolean;
+  matchedFamilyName?: boolean;
+  matchedBirthDate?: boolean;
+  matchedAddress?: boolean;
+  credentialExpired?: boolean;
+  credentialExpiry?: string;
+  reason?: string;
+  claimsSnapshot?: IrishLifeClaimsSnapshot;
+};
 
 export type NewBusinessCaseStatusCode =
   | 'POLICY_SETUP'
@@ -23,34 +52,13 @@ export type NewBusinessCaseStatus = {
   at: string;
 };
 
-export type NewBusinessClaimsSnapshot = {
-  givenName?: unknown;
-  familyName?: unknown;
-  birthDate?: unknown;
-  address?: unknown;
-  expiry?: unknown;
-  disclosedClaimPaths?: unknown;
-};
+export type NewBusinessClaimsSnapshot = IrishLifeClaimsSnapshot;
 
-export type NewBusinessValidationSummary = {
-  matchedGivenName?: boolean;
-  matchedFamilyName?: boolean;
-  matchedBirthDate?: boolean;
-  matchedAddress?: boolean;
-  credentialExpired?: boolean;
-  credentialExpiry?: string;
-  reason?: string;
-  claimsSnapshot?: NewBusinessClaimsSnapshot;
-};
+export type NewBusinessValidationSummary = IrishLifeValidationSummary;
 
-export type NewBusinessCaseSummary = {
+export type NewBusinessCaseSummary = IrishLifeCasePartyDetails & {
   caseId: string;
   policyReference: string;
-  customerGivenName: string;
-  customerFamilyName: string;
-  customerEmail: string;
-  customerBirthDate: string;
-  customerAddress: string;
   currentStatus: NewBusinessCaseStatusCode;
   statuses: NewBusinessCaseStatus[];
   customerPortalUrl: string;
@@ -64,18 +72,85 @@ export type NewBusinessCaseSummary = {
 
 export type CreateNewBusinessCaseRequest = {
   policyReference?: string;
-  customerGivenName: string;
-  customerFamilyName: string;
-  customerEmail: string;
-  customerBirthDate: string;
-  customerAddress: string;
-};
+} & IrishLifeCasePartyDetails;
 
 export type CompleteNewBusinessCaseRequest = {
   transactionId?: string;
   success: boolean;
   reason?: string;
   validation?: NewBusinessValidationSummary;
+};
+
+export type ExistingBusinessCaseStatusCode =
+  | 'WITHDRAWAL_REQUEST_RECEIVED'
+  | 'AUTOMATED_CHECKS_STARTED'
+  | 'PROOF_INVITE_SENT'
+  | 'PROOFS_RECEIVED'
+  | 'PROOFS_VERIFIED'
+  | 'POLICY_APPLICATION_MATCHED'
+  | 'AML_RECORD_NOT_FOUND'
+  | 'AUTOMATED_DECISION_RECORDED'
+  | 'CUSTOMER_NOTIFIED'
+  | 'COMPLETED'
+  | 'FAILED';
+
+export type ExistingBusinessCaseStatus = {
+  code: ExistingBusinessCaseStatusCode;
+  label: string;
+  at: string;
+};
+
+export type ExistingBusinessNotificationCode =
+  | 'WITHDRAWAL_REQUEST_ALERT'
+  | 'AUTOMATED_CHECKS_STARTED_ALERT'
+  | 'PROOF_REQUESTED_ALERT'
+  | 'PROOFS_SUBMITTED_ALERT'
+  | 'PROOFS_READY_ALERT'
+  | 'AML_CHECK_COMPLETED_ALERT'
+  | 'DECISION_READY_ALERT'
+  | 'MANUAL_REVIEW_ALERT';
+
+export type ExistingBusinessNotification = {
+  code: ExistingBusinessNotificationCode;
+  label: string;
+  message: string;
+  at: string;
+};
+
+export type ExistingBusinessValidationSummary = IrishLifeValidationSummary;
+
+export type ExistingBusinessCaseSummary = IrishLifeCasePartyDetails & {
+  caseId: string;
+  policyNumber: string;
+  claimReference: string;
+  productName: string;
+  withdrawalAmount: string;
+  bankAccountLastFour: string;
+  requestedAt: string;
+  currentStatus: ExistingBusinessCaseStatusCode;
+  statuses: ExistingBusinessCaseStatus[];
+  notifications: ExistingBusinessNotification[];
+  customerPortalUrl: string;
+  walletDeepLink?: string;
+  activeTransaction?: ActiveTransaction;
+  inviteEmailSent: boolean;
+  completionEmailSent: boolean;
+  amlRecordFound: boolean;
+  policyApplicationMatched: boolean;
+  automatedDecision?: string;
+  failureReason?: string;
+  validation?: ExistingBusinessValidationSummary;
+};
+
+export type CreateExistingBusinessCaseRequest = {
+  policyNumber: string;
+};
+
+export type CompleteExistingBusinessCaseRequest = {
+  transactionId?: string;
+  success: boolean;
+  reason?: string;
+  validation?: ExistingBusinessValidationSummary;
 };
 
 @Injectable({
@@ -88,20 +163,20 @@ export class IrishLifeCaseService {
 		request: CreateNewBusinessCaseRequest
 	): Observable<NewBusinessCaseSummary> {
 		return this.httpService.post<NewBusinessCaseSummary, CreateNewBusinessCaseRequest>(
-			BASE_ENDPOINT,
+			NEW_BUSINESS_BASE_ENDPOINT,
 			request
 		);
 	}
 
 	inviteCase (caseId: string): Observable<NewBusinessCaseSummary> {
 		return this.httpService.post<NewBusinessCaseSummary, Record<string, never>>(
-			`${BASE_ENDPOINT}/${caseId}/invite`,
+			`${NEW_BUSINESS_BASE_ENDPOINT}/${caseId}/invite`,
 			{}
 		);
 	}
 
 	getCase (caseId: string): Observable<NewBusinessCaseSummary> {
-		return this.httpService.get<NewBusinessCaseSummary>(`${BASE_ENDPOINT}/${caseId}`);
+		return this.httpService.get<NewBusinessCaseSummary>(`${NEW_BUSINESS_BASE_ENDPOINT}/${caseId}`);
 	}
 
 	completeCase (
@@ -109,7 +184,41 @@ export class IrishLifeCaseService {
 		request: CompleteNewBusinessCaseRequest
 	): Observable<NewBusinessCaseSummary> {
 		return this.httpService.post<NewBusinessCaseSummary, CompleteNewBusinessCaseRequest>(
-			`${BASE_ENDPOINT}/${caseId}/complete`,
+			`${NEW_BUSINESS_BASE_ENDPOINT}/${caseId}/complete`,
+			request
+		);
+	}
+
+	createExistingBusinessCase (
+		request: CreateExistingBusinessCaseRequest
+	): Observable<ExistingBusinessCaseSummary> {
+		return this.httpService.post<ExistingBusinessCaseSummary, CreateExistingBusinessCaseRequest>(
+			EXISTING_BUSINESS_BASE_ENDPOINT,
+			request
+		);
+	}
+
+	inviteExistingBusinessCase (caseId: string): Observable<ExistingBusinessCaseSummary> {
+		return this.httpService.post<ExistingBusinessCaseSummary, Record<string, never>>(
+			`${EXISTING_BUSINESS_BASE_ENDPOINT}/${caseId}/invite`,
+			{}
+		);
+	}
+
+	getExistingBusinessCase (caseId: string): Observable<ExistingBusinessCaseSummary> {
+		return this.httpService.get<ExistingBusinessCaseSummary>(`${EXISTING_BUSINESS_BASE_ENDPOINT}/${caseId}`);
+	}
+
+  listExistingBusinessCases (): Observable<ExistingBusinessCaseSummary[]> {
+    return this.httpService.get<ExistingBusinessCaseSummary[]>(EXISTING_BUSINESS_BASE_ENDPOINT);
+  }
+
+	completeExistingBusinessCase (
+		caseId: string,
+		request: CompleteExistingBusinessCaseRequest
+	): Observable<ExistingBusinessCaseSummary> {
+		return this.httpService.post<ExistingBusinessCaseSummary, CompleteExistingBusinessCaseRequest>(
+			`${EXISTING_BUSINESS_BASE_ENDPOINT}/${caseId}/complete`,
 			request
 		);
 	}

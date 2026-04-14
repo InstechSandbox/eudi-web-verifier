@@ -4,15 +4,15 @@ import { RouterLink } from '@angular/router';
 import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-layout.component';
 
 @Component({
-  selector: 'vc-irish-life-journey-selector',
-  standalone: true,
-  imports: [CommonModule, RouterLink, WalletLayoutComponent],
-  template: `
+	selector: 'vc-irish-life-journey-selector',
+	standalone: true,
+	imports: [CommonModule, RouterLink, WalletLayoutComponent],
+	template: `
     <vc-wallet-layout>
-      <div body class="irish-life-shell">
-        <section class="hero bg-panel">
-          <p class="eyebrow">Irish Life verifier</p>
-          <h1>Dual-surface proof journeys for New Business</h1>
+      <div body class="irish-life-shell irish-life-theme irish-life-page">
+        <section class="hero bg-panel irish-life-hero">
+          <p class="eyebrow irish-life-eyebrow">Irish Life verifier</p>
+          <h1 class="irish-life-display">Dual-surface proof journeys for Irish Life</h1>
           <p class="lede">
             Start from the agent workflow or go directly to the customer proof page.
             The verifier keeps both surfaces aligned on the same case state.
@@ -46,36 +46,30 @@ import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-lay
             <p class="label">Journey 2</p>
             <h2>Existing Business Claims</h2>
             <p>
-              Reserved for the future claims journey with distinct agent and customer surfaces.
+              Customer-led withdrawal request with automatic PID proof handoff and a read-only agent monitor.
             </p>
-            <span class="journey-link disabled">Coming next</span>
+            <a routerLink="/irish-life/existing-business/agent" class="journey-link">Open monitoring workspace</a>
+          </article>
+
+          <article class="journey-card accent">
+            <p class="label">Customer entry</p>
+            <h2>Existing Business Customer</h2>
+            <p>
+              Enter your policy number, request the withdrawal, and continue directly into wallet proof sharing.
+            </p>
+            <a routerLink="/irish-life/existing-business/customer" class="journey-link">
+              Start customer journey
+            </a>
           </article>
         </section>
       </div>
     </vc-wallet-layout>
   `,
-  styles: [
-    `
-      :host {
-        --irish-life-navy: #2457a6;
-        --irish-life-blue: #4f86d6;
-        --irish-life-sky: #e5effb;
-        --irish-life-paper: #f8fbff;
-        --irish-life-line: #d2def1;
-        --irish-life-ink: #18345f;
-        display: block;
-      }
+	styles: [
+		`
+      :host { display: block; }
 
       .irish-life-shell {
-        padding: 1.5rem 0 2rem;
-      }
-
-      .hero {
-        background:
-          radial-gradient(circle at top right, rgba(191, 215, 247, 0.45), transparent 32%),
-          linear-gradient(145deg, #5d92dd, var(--irish-life-navy) 78%);
-        color: white;
-        margin-bottom: 1.5rem;
         overflow: hidden;
       }
 
@@ -89,16 +83,9 @@ import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-lay
       }
 
       h1,
-      h2 {
-        font-family: Georgia, 'Times New Roman', serif;
-        line-height: 1.05;
-        margin: 0;
-      }
+      h2 { line-height: 1.05; margin: 0; font-family: Georgia, 'Times New Roman', serif; }
 
-      h1 {
-        font-size: clamp(2rem, 5vw, 3.4rem);
-        max-width: 11ch;
-      }
+      h1 { max-width: 11ch; }
 
       .lede {
         color: rgba(255, 255, 255, 0.86);
@@ -161,6 +148,6 @@ import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-lay
         color: #5a6784;
       }
     `,
-  ],
+	],
 })
 export class IrishLifeJourneySelectorComponent {}

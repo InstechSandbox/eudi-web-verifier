@@ -5,10 +5,10 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-layout.component';
 import {
-	CompleteNewBusinessCaseRequest,
+	CompleteExistingBusinessCaseRequest,
+	ExistingBusinessCaseSummary,
+	ExistingBusinessValidationSummary,
 	IrishLifeCaseService,
-	NewBusinessCaseSummary,
-	NewBusinessValidationSummary,
 } from '@core/services/irish-life-case.service';
 import { LocalStorageService } from '@core/services/local-storage.service';
 import { ACTIVE_TRANSACTION } from '@core/constants/general';
@@ -34,7 +34,7 @@ import {
 } from './irish-life-pid-validation';
 
 @Component({
-	selector: 'vc-new-business-customer',
+	selector: 'vc-existing-business-customer',
 	standalone: true,
 	imports: [
 		CommonModule,
@@ -50,50 +50,73 @@ import {
 	providers: [VerifierEndpointService],
 	template: `
     <vc-wallet-layout>
-			<div body class="page irish-life-theme irish-life-page" *ngIf="!loading; else loadingState">
-				<section class="hero bg-panel irish-life-hero" *ngIf="caseSummary as currentCase">
-					<p class="eyebrow irish-life-eyebrow">Customer proof page</p>
-					<h1 class="irish-life-display">Share your identity proof for Irish Life</h1>
+      <div body class="irish-life-theme irish-life-page" *ngIf="!loading; else loadingState">
+        <section class="bg-panel irish-life-hero" *ngIf="caseSummary as currentCase">
+          <p class="irish-life-eyebrow">Existing Business Claims</p>
+          <h1 class="irish-life-display">Confirm your withdrawal request</h1>
           <p>
-            Case reference: <strong>{{ currentCase.policyReference }}</strong>
+						Policy number: <strong>{{ currentCase.policyNumber }}</strong>
+					</p>
+					<p>
+            Claim reference: <strong>{{ currentCase.claimReference }}</strong>
           </p>
           <p>
-            We will ask for your PID so Irish Life can confirm your name, date of birth,
-            address, and credential validity.
+						Your withdrawal request has been received. Irish Life is now asking for PID proof so
+						the release decision can be processed automatically.
           </p>
         </section>
 
-				<mat-card class="panel irish-life-panel" *ngIf="caseSummary as currentCase">
+        <mat-card class="irish-life-panel" *ngIf="caseSummary as currentCase">
           <mat-card-content>
-			<p class="detail-label irish-life-detail-label">Current status</p>
-			<h2 class="irish-life-heading">{{ currentCase.currentStatus }}</h2>
-			<p *ngIf="shouldShowInlineFailureReason(currentCase)" class="error">{{ currentCase.failureReason }}</p>
-
-            <div class="actions-row" *ngIf="!concludedTransaction && currentCase.activeTransaction && !isTerminalState(currentCase)">
-							<a routerLink="/irish-life/new-business/customer" class="ghost-link irish-life-ghost-link inline-link">
-                Use another case reference
-              </a>
+            <div class="request-summary">
+							<div>
+								<p class="irish-life-detail-label">Policy number</p>
+								<strong>{{ currentCase.policyNumber }}</strong>
+							</div>
+              <div>
+                <p class="irish-life-detail-label">Product</p>
+                <strong>{{ currentCase.productName }}</strong>
+              </div>
+              <div>
+                <p class="irish-life-detail-label">Withdrawal amount</p>
+                <strong>{{ currentCase.withdrawalAmount }}</strong>
+              </div>
+              <div>
+                <p class="irish-life-detail-label">Destination account</p>
+                <strong>Ending {{ currentCase.bankAccountLastFour }}</strong>
+              </div>
+							<div>
+								<p class="irish-life-detail-label">Request status</p>
+								<strong>{{ currentCase.currentStatus }}</strong>
+							</div>
             </div>
 
-            <div class="proof-shell" *ngIf="currentCase.activeTransaction && !concludedTransaction && !isTerminalState(currentCase)">
+						<div class="request-panel" *ngIf="!proofStepStarted && !processingResult && !isTerminalState(currentCase)">
+              <p>
+								Preparing your wallet proof request. If it does not appear automatically, refresh
+								this page.
+							</p>
+            </div>
+
+            <div class="proof-shell" *ngIf="proofStepStarted && currentCase.activeTransaction && !concludedTransaction && !isTerminalState(currentCase)">
               <vc-qr-code (transactionConcludedEvent)="handleTransactionConcluded($event)"></vc-qr-code>
             </div>
 
             <div class="empty-state" *ngIf="!currentCase.activeTransaction && !isTerminalState(currentCase)">
               <p>
-                This case has not been invited yet. Return to the support agent or wait for the
-                invitation email to be sent.
+								The verifier has not finished preparing the wallet proof request yet. Refresh this
+								page in a moment if the proof handoff does not appear.
               </p>
             </div>
 
             <div class="progress-state" *ngIf="processingResult">
               <mat-spinner diameter="34"></mat-spinner>
-              <p>Validating your proof and updating the case outcome.</p>
+              <p>Validating your proof and recording the automated claims outcome.</p>
             </div>
 
             <div *ngIf="shouldShowTerminalResult(currentCase)">
               <mat-divider></mat-divider>
-							<div class="result-banner irish-life-result-banner" [class.success]="caseSummary.currentStatus === 'COMPLETED'" [class.failure]="caseSummary.currentStatus === 'FAILED'">
+              <div class="irish-life-result-banner" [class.success]="caseSummary.currentStatus === 'COMPLETED'" [class.failure]="caseSummary.currentStatus === 'FAILED'">
                 <strong>{{ resultHeadline }}</strong>
                 <p>{{ resultMessage }}</p>
               </div>
@@ -102,8 +125,8 @@ import {
                 <li *ngFor="let reason of validationReasons">{{ reason }}</li>
               </ul>
 
-							<div class="evidence-panel irish-life-evidence-panel" *ngIf="validationDetails.length > 0">
-								<p class="detail-label irish-life-detail-label">Verifier comparison</p>
+              <div class="irish-life-evidence-panel" *ngIf="validationDetails.length > 0">
+                <p class="irish-life-detail-label">Verifier comparison</p>
                 <div class="evidence-item" *ngFor="let detail of validationDetails">
                   <p class="evidence-name">{{ detail.label }}</p>
                   <p><strong>Application:</strong> {{ detail.expected }}</p>
@@ -115,6 +138,12 @@ import {
               </div>
 
               <vc-presentations-results *ngIf="concludedTransaction" [concludedTransaction]="concludedTransaction"></vc-presentations-results>
+
+						<div class="actions-row" *ngIf="caseSummary.currentStatus !== 'FAILED'">
+							<a routerLink="/irish-life/existing-business/customer" class="irish-life-ghost-link inline-link">
+								Start another withdrawal request
+							</a>
+						</div>
             </div>
           </mat-card-content>
         </mat-card>
@@ -123,19 +152,23 @@ import {
       <ng-template #loadingState>
         <div body class="loading-block">
           <mat-spinner diameter="36"></mat-spinner>
-          <p>Loading Irish Life case details...</p>
+          <p>Loading Irish Life claim details...</p>
         </div>
       </ng-template>
     </vc-wallet-layout>
   `,
 	styles: [
 		`
-			:host { display: block; }
+      :host { display: block; }
 
-      .proof-shell {
-        margin-top: 1rem;
+      .request-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
       }
 
+      .request-panel,
       .progress-state,
       .loading-block,
       .empty-state {
@@ -146,44 +179,34 @@ import {
         padding: 1.5rem 0;
       }
 
-      .validation-list {
-        margin: 0 0 1rem;
-        padding-left: 1.1rem;
+      .request-panel {
+        border-radius: 16px;
+        background: linear-gradient(180deg, #f1f6fd, var(--irish-life-paper));
+        border: 1px solid var(--irish-life-line);
+        padding: 1rem;
+        justify-items: stretch;
       }
 
-			.evidence-panel { margin-bottom: 1rem; }
-
-      .evidence-item + .evidence-item {
-        margin-top: 0.85rem;
-        padding-top: 0.85rem;
-        border-top: 1px solid rgba(0, 0, 0, 0.08);
+      .actions-row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
       }
 
-      .evidence-name {
-        margin: 0 0 0.35rem;
-        font-weight: 700;
-      }
-
-      .evidence-item p,
-      .evidence-note {
-        margin: 0.2rem 0;
-      }
-
-      .evidence-note {
-        margin-top: 0.85rem;
-				color: #52617f;
-      }
-
-      .error {
-        color: #b42318;
-      }
+      .proof-shell { margin-top: 1rem; }
+      .validation-list { margin: 0 0 1rem; padding-left: 1.1rem; }
+      .evidence-item + .evidence-item { margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px solid rgba(0, 0, 0, 0.08); }
+      .evidence-name, .evidence-item p, .evidence-note { margin: 0.2rem 0; }
     `,
 	],
 })
-export class NewBusinessCustomerComponent implements OnInit {
+export class ExistingBusinessCustomerComponent implements OnInit {
 	loading = true;
 	processingResult = false;
-	caseSummary?: NewBusinessCaseSummary;
+	proofStepStarted = false;
+	caseSummary?: ExistingBusinessCaseSummary;
 	concludedTransaction?: ConcludedTransaction;
 	resultHeadline = '';
 	resultMessage = '';
@@ -203,12 +226,16 @@ export class NewBusinessCustomerComponent implements OnInit {
 		const caseId = this.activeRoute.snapshot.paramMap.get('caseId');
 		if (!caseId) {
 			this.loading = false;
-			this.resultHeadline = 'Case reference missing';
-			this.resultMessage = 'No customer case reference was provided.';
+			this.resultHeadline = 'Withdrawal request missing';
+			this.resultMessage = 'Start from the withdrawal request page and enter a supported policy number.';
 			return;
 		}
 
 		this.loadCase(caseId);
+	}
+
+	startProofStep (): void {
+		this.proofStepStarted = true;
 	}
 
 	async handleTransactionConcluded (transaction: ConcludedTransaction): Promise<void> {
@@ -216,10 +243,19 @@ export class NewBusinessCustomerComponent implements OnInit {
 		await this.evaluateAndComplete(transaction);
 	}
 
+	protected isTerminalState (summary: ExistingBusinessCaseSummary): boolean {
+		return summary.currentStatus === 'COMPLETED' || summary.currentStatus === 'FAILED';
+	}
+
+	protected shouldShowTerminalResult (summary: ExistingBusinessCaseSummary): boolean {
+		return this.isTerminalState(summary) || !!this.concludedTransaction;
+	}
+
 	private loadCase (caseId: string): void {
-		this.caseService.getCase(caseId).subscribe({
+		this.caseService.getExistingBusinessCase(caseId).subscribe({
 			next: async (summary) => {
 				this.caseSummary = summary;
+				this.proofStepStarted = !!summary.activeTransaction && !this.isTerminalState(summary);
 				if (summary.activeTransaction) {
 					this.localStorageService.set(ACTIVE_TRANSACTION, JSON.stringify(summary.activeTransaction));
 				}
@@ -228,6 +264,7 @@ export class NewBusinessCustomerComponent implements OnInit {
 
 				const responseCode = this.activeRoute.snapshot.queryParamMap.get('response_code');
 				if (responseCode && summary.activeTransaction) {
+					this.proofStepStarted = true;
 					const transaction = await this.loadSameDeviceConclusion(
 						summary.activeTransaction.initialized_transaction.transaction_id,
 						responseCode
@@ -243,30 +280,25 @@ export class NewBusinessCustomerComponent implements OnInit {
 			},
 			error: () => {
 				this.loading = false;
-				this.resultHeadline = 'Case not found';
-				this.resultMessage = 'The requested Irish Life case could not be loaded.';
+				this.resultHeadline = 'Withdrawal request not found';
+				this.resultMessage = 'The requested Irish Life withdrawal request could not be loaded.';
 				this.changeDetectorRef.detectChanges();
 			},
 		});
 	}
 
-	private async loadSameDeviceConclusion (
-		transactionId: string,
-		responseCode: string
-	): Promise<ConcludedTransaction | null> {
+	private async loadSameDeviceConclusion (transactionId: string, responseCode: string): Promise<ConcludedTransaction | null> {
 		if (!this.caseSummary?.activeTransaction) {
 			return null;
 		}
 
 		try {
-			const walletResponse = await firstValueFrom(
-				this.verifierEndpointService.getWalletResponse(transactionId, responseCode)
-			);
+			const walletResponse = await firstValueFrom(this.verifierEndpointService.getWalletResponse(transactionId, responseCode));
 			this.localStorageService.remove(ACTIVE_TRANSACTION);
 			return this.concludeTransaction(walletResponse);
 		} catch {
 			this.resultHeadline = 'Wallet response unavailable';
-			this.resultMessage = 'The wallet response could not be retrieved for this case.';
+			this.resultMessage = 'The wallet response could not be retrieved for this claim.';
 			this.changeDetectorRef.detectChanges();
 			return null;
 		}
@@ -291,14 +323,14 @@ export class NewBusinessCustomerComponent implements OnInit {
 		this.validationReasons = [];
 
 		const validation = await this.validateTransaction(transaction);
-		const request: CompleteNewBusinessCaseRequest = {
+		const request: CompleteExistingBusinessCaseRequest = {
 			transactionId: transaction.transactionId,
 			success: this.validationReasons.length === 0,
 			reason: this.validationReasons.join(' '),
 			validation,
 		};
 
-		this.caseService.completeCase(this.caseSummary.caseId, request).subscribe({
+		this.caseService.completeExistingBusinessCase(this.caseSummary.caseId, request).subscribe({
 			next: (summary) => {
 				this.caseSummary = summary;
 				this.processingResult = false;
@@ -307,16 +339,14 @@ export class NewBusinessCustomerComponent implements OnInit {
 			},
 			error: () => {
 				this.processingResult = false;
-				this.resultHeadline = 'Case update failed';
-				this.resultMessage = 'The verifier could not store the final case outcome.';
+				this.resultHeadline = 'Claim update failed';
+				this.resultMessage = 'The verifier could not store the final claim outcome.';
 				this.changeDetectorRef.detectChanges();
 			},
 		});
 	}
 
-	private async validateTransaction (
-		transaction: ConcludedTransaction
-	): Promise<NewBusinessValidationSummary> {
+	private async validateTransaction (transaction: ConcludedTransaction): Promise<ExistingBusinessValidationSummary> {
 		const queryId = transaction.presentationQuery.credentials[0]?.id;
 		const token = queryId ? transaction.walletResponse.vp_token[queryId]?.[0] : undefined;
 
@@ -326,11 +356,8 @@ export class NewBusinessCustomerComponent implements OnInit {
 		}
 
 		try {
-			const payload = await firstValueFrom(
-				this.verifierEndpointService.validateSdJwtVc(token, transaction.nonce)
-			);
-
-			const validation: NewBusinessValidationSummary = buildIrishLifePidValidation(this.caseSummary, payload);
+			const payload = await firstValueFrom(this.verifierEndpointService.validateSdJwtVc(token, transaction.nonce));
+			const validation = buildIrishLifePidValidation(this.caseSummary, payload);
 			this.validationReasons = collectIrishLifePidValidationReasons(validation);
 			return validation;
 		} catch (error: any) {
@@ -343,53 +370,24 @@ export class NewBusinessCustomerComponent implements OnInit {
 		}
 	}
 
-	protected isTerminalState (summary: NewBusinessCaseSummary): boolean {
-		return summary.currentStatus === 'COMPLETED' || summary.currentStatus === 'FAILED';
-	}
-
-	protected shouldShowTerminalResult (summary: NewBusinessCaseSummary): boolean {
-		return this.isTerminalState(summary) || !!this.concludedTransaction;
-	}
-
-	protected shouldShowInlineFailureReason (summary: NewBusinessCaseSummary): boolean {
-		if (!summary.failureReason) {
-			return false;
-		}
-
-		return !this.isTerminalState(summary) ||
-			(this.validationReasons.length === 0 && this.validationDetails.length === 0);
-	}
-
-	private applyPersistedOutcome (summary: NewBusinessCaseSummary): void {
+	private applyPersistedOutcome (summary: ExistingBusinessCaseSummary): void {
+		this.validationReasons = buildFailureReasons(summary);
 		this.validationDetails = buildValidationDetails(summary);
 		this.disclosedClaimPaths = disclosedClaimPathsFromSummary(summary);
 
 		if (summary.currentStatus === 'COMPLETED') {
-			this.applyCompletedOutcome(summary);
+			this.resultHeadline = 'Withdrawal checks completed';
+			this.resultMessage = 'Irish Life has verified your PID and released the automated claims decision.';
 			return;
 		}
 
 		if (summary.currentStatus === 'FAILED') {
-			this.applyFailedOutcome(summary);
+			this.resultHeadline = 'Withdrawal proof could not be accepted';
+			this.resultMessage = summary.failureReason || 'The presented PID did not satisfy the claim checks.';
 			return;
 		}
 
-		this.validationReasons = [];
-	}
-
-	private applyCompletedOutcome (summary: NewBusinessCaseSummary): void {
-		this.resultHeadline = 'Proof accepted';
-		this.resultMessage = summary.completionEmailSent ?
-			'Your proof has been accepted and a completion email has been sent.' :
-			'Your proof has been accepted. The backend did not report a completion email as sent.';
-		this.validationReasons = [];
-	}
-
-	private applyFailedOutcome (summary: NewBusinessCaseSummary): void {
-		this.resultHeadline = 'Proof failed';
-		this.resultMessage = this.validationDetails.length > 0 ?
-			'The proof did not match the application details shown below.' :
-			summary.failureReason || 'The proof could not be validated for this case.';
-		this.validationReasons = buildFailureReasons(summary);
+		this.resultHeadline = '';
+		this.resultMessage = '';
 	}
 }

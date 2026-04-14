@@ -2,6 +2,7 @@
 @use "template" as temp;
 @use "/src/layout-breakpoint" as points;
 @use "sass:map";
+@use "app/features/irish-life/irish-life-theme";
 
 html {
   height: 100vh;
