@@ -2,12 +2,12 @@
 FROM node:20.19.3 AS build-step
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
-COPY package.json /usr/src/app
+COPY package.json package-lock.json /usr/src/app/
 
-RUN yarn install
+RUN npm ci --ignore-scripts
 COPY . /usr/src/app
 RUN rm -rf dist
-RUN yarn run build
+RUN npm run build
 
 # Stage 2
 FROM nginx
