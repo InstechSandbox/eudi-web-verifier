@@ -387,9 +387,11 @@ export class NewBusinessCustomerComponent implements OnInit {
 
 	private applyFailedOutcome (summary: NewBusinessCaseSummary): void {
 		this.resultHeadline = 'Proof failed';
-		this.resultMessage = this.validationDetails.length > 0 ?
-			'The proof did not match the application details shown below.' :
-			summary.failureReason || 'The proof could not be validated for this case.';
 		this.validationReasons = buildFailureReasons(summary);
+		this.resultMessage = this.validationReasons.some((reason) => reason.includes('was not disclosed by the wallet')) ?
+			'The PID was presented, but one or more required details were not disclosed by the wallet.' :
+			this.validationDetails.length > 0 ?
+				'The proof did not match the application details shown below.' :
+				summary.failureReason || 'The proof could not be validated for this case.';
 	}
 }

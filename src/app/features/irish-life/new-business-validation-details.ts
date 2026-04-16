@@ -90,9 +90,18 @@ export function buildFailureReasons (summary: IrishLifeCaseSummaryLike): string[
 		return failureReason ? [failureReason] : [];
 	}
 
-	const reasons = VALIDATION_FIELDS.flatMap((field) =>
-		validation[field.flag] === false ? [field.reason] : []
-	);
+	const reasons = VALIDATION_FIELDS.flatMap((field) => {
+		if (validation[field.flag] !== false) {
+			return [];
+		}
+
+		const actualValue = snapshotValue(validation.claimsSnapshot, field.actual);
+		if (!actualValue) {
+			return [`${field.label} was not disclosed by the wallet.`];
+		}
+
+		return [field.reason];
+	});
 
 	if (validation.credentialExpired) {
 		reasons.push('The presented PID is expired.');

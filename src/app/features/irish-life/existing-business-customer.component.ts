@@ -383,7 +383,9 @@ export class ExistingBusinessCustomerComponent implements OnInit {
 
 		if (summary.currentStatus === 'FAILED') {
 			this.resultHeadline = 'Withdrawal proof could not be accepted';
-			this.resultMessage = summary.failureReason || 'The presented PID did not satisfy the claim checks.';
+			this.resultMessage = this.validationReasons.some((reason) => reason.includes('was not disclosed by the wallet')) ?
+				'The PID was presented, but one or more required details were not disclosed by the wallet.' :
+				summary.failureReason || 'The presented PID did not satisfy the claim checks.';
 			return;
 		}
 
