@@ -5,8 +5,11 @@
         server_name localhost;
         root /usr/share/nginx/html;
         index index.html;
+        resolver 169.254.169.253 ipv6=off valid=30s;
+        resolver_timeout 5s;
+        set $host_api ${HOST_API};
         location /ui/ {
-            proxy_pass ${HOST_API};
+            proxy_pass $host_api;
             proxy_http_version 1.1;
             proxy_ssl_server_name on;
             proxy_set_header Host $proxy_host;
@@ -15,7 +18,7 @@
             proxy_set_header X-Forwarded-Host $host;
         }
         location /wallet/ {
-            proxy_pass ${HOST_API};
+            proxy_pass $host_api;
             proxy_http_version 1.1;
             proxy_ssl_server_name on;
             proxy_set_header Host $proxy_host;
@@ -24,7 +27,7 @@
             proxy_set_header X-Forwarded-Host $host;
         }
         location /utilities/ {
-            proxy_pass ${HOST_API};
+            proxy_pass $host_api;
             proxy_http_version 1.1;
             proxy_ssl_server_name on;
             proxy_set_header Host $proxy_host;
