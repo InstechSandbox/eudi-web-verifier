@@ -2,7 +2,11 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-layout.component';
-import { ExistingBusinessCaseSummary, IrishLifeCaseService } from '@core/services/irish-life-case.service';
+import {
+  ExistingBusinessCaseSummary,
+  getExistingBusinessCurrentStatusLabel,
+  IrishLifeCaseService,
+} from '@core/services/irish-life-case.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
@@ -11,7 +15,7 @@ import { Subscription, interval } from 'rxjs';
 import {
 	buildFailureReasons,
 	buildValidationDetails,
-	disclosedClaimPathsFromSummary,
+  hasOnlyNonBlockingFailure,
 } from './new-business-validation-details';
 
 @Component({
@@ -30,14 +34,14 @@ import {
     <vc-wallet-layout>
       <div body class="irish-life-theme irish-life-page">
         <section class="bg-panel irish-life-hero">
-          <p class="irish-life-eyebrow">Existing Business Claims</p>
+          <p class="irish-life-eyebrow">Existing Business</p>
           <div class="hero-headline">
             <div>
-              <h1 class="irish-life-display">Claims monitoring workspace</h1>
+              <h1 class="irish-life-display">Monitoring workspace</h1>
               <p>
-                This monitor follows the customer-driven withdrawal journey end to end. The
-                customer starts the request, the verifier requests PID proof automatically, and the
-                agent view watches the resulting case states and notifications.
+                This workspace follows the customer journey end to end. The verifier starts the
+                proof request automatically and the agent view watches the resulting case states
+                and notifications.
               </p>
             </div>
             <a routerLink="/irish-life" class="irish-life-ghost-link">Back to journey selector</a>
@@ -48,7 +52,7 @@ import {
           <mat-card class="irish-life-panel monitor-summary">
             <mat-card-header>
               <mat-card-title>Monitor summary</mat-card-title>
-              <mat-card-subtitle>Read-only view of all Existing Business withdrawal requests</mat-card-subtitle>
+              <mat-card-subtitle>Read-only view of all existing-business requests</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
               <div class="summary-grid">
@@ -68,13 +72,13 @@ import {
 
               <div class="busy-state" *ngIf="loading">
                 <mat-spinner diameter="26"></mat-spinner>
-                <span>Loading Existing Business cases...</span>
+                <span>Loading existing-business requests...</span>
               </div>
 
               <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
               <p *ngIf="!loading && cases.length === 0" class="empty-copy">
-                No withdrawal requests have been created yet.
+                No customer requests have been created yet.
               </p>
 
               <div class="case-list" *ngIf="cases.length > 0">
@@ -88,9 +92,9 @@ import {
                 >
                   <span>
                     <strong>{{ caseSummary.claimReference }}</strong>
+                    <span class="case-status-inline">{{ currentStatusLabel(caseSummary) }}</span>
                     <span class="case-meta">Policy {{ caseSummary.policyNumber }}</span>
                   </span>
-                  <span class="case-status">{{ caseSummary.currentStatus }}</span>
                 </button>
               </div>
             </mat-card-content>
@@ -99,66 +103,76 @@ import {
           <mat-card class="irish-life-panel" *ngIf="selectedCase as currentCase">
             <mat-card-header>
               <mat-card-title>{{ currentCase.claimReference }}</mat-card-title>
-              <mat-card-subtitle>Current state: {{ currentCase.currentStatus }}</mat-card-subtitle>
+              <mat-card-subtitle>Current state: {{ currentStatusLabel(currentCase) }}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
               <div class="summary-grid detail-summary-grid">
-                <div>
-                  <p class="irish-life-detail-label">Policy number</p>
-                  <strong>{{ currentCase.policyNumber }}</strong>
-                </div>
-                <div>
-                  <p class="irish-life-detail-label">Product</p>
-                  <strong>{{ currentCase.productName }}</strong>
-                </div>
-                <div>
-                  <p class="irish-life-detail-label">Withdrawal amount</p>
-                  <strong>{{ currentCase.withdrawalAmount }}</strong>
-                </div>
-                <div>
-                  <p class="irish-life-detail-label">Destination account</p>
-                  <strong>Ending {{ currentCase.bankAccountLastFour }}</strong>
-                </div>
-              </div>
-
-              <div class="summary-grid detail-summary-grid">
-                <div>
+                <div class="summary-detail-item summary-detail-item-fixed">
                   <p class="irish-life-detail-label">Requested at</p>
-                  <strong>{{ currentCase.requestedAt | date: 'medium' }}</strong>
+                  <div class="summary-detail-value">
+                    <strong>{{ currentCase.requestedAt | date: 'medium' }}</strong>
+                  </div>
                 </div>
-                <div>
-                  <p class="irish-life-detail-label">Customer proof page</p>
-                  <a [href]="currentCase.customerPortalUrl" target="_blank" rel="noreferrer">
-                    Open customer journey
-                  </a>
+                <div class="summary-detail-item summary-detail-item-fixed summary-link-item">
+                  <p class="irish-life-detail-label">Present to customer</p>
+                  <div class="summary-detail-value">
+                    <a [href]="currentCase.customerPortalUrl" target="_blank" rel="noreferrer" class="irish-life-ghost-link inline-link">
+                      Customer page
+                    </a>
+                  </div>
                 </div>
-                <div>
-                  <p class="irish-life-detail-label">Policy application match</p>
-                  <strong>{{ currentCase.policyApplicationMatched ? 'Matched' : 'Pending' }}</strong>
+                <div class="summary-detail-item summary-detail-item-fixed">
+                  <p class="irish-life-detail-label summary-detail-label-buffered">Policy application match</p>
+                  <div class="summary-detail-value">
+                    <strong>{{ currentCase.policyApplicationMatched ? 'Matched' : 'Pending' }}</strong>
+                  </div>
                 </div>
-                <div>
+                <div class="summary-detail-item summary-detail-item-fixed">
                   <p class="irish-life-detail-label">AML lookup</p>
-                  <strong>{{ amlLookupLabel(currentCase) }}</strong>
+                  <div class="summary-detail-value">
+                    <strong>{{ amlLookupLabel(currentCase) }}</strong>
+                  </div>
                 </div>
               </div>
 
               <mat-divider></mat-divider>
 
               <div class="timeline-grid">
-                <div>
+                <div class="irish-life-section-panel">
+                  <p class="irish-life-detail-label">Claim details</p>
+                  <div class="summary-grid compact-detail-grid">
+                    <div>
+                      <p class="irish-life-detail-label">Policy number</p>
+                      <strong>{{ currentCase.policyNumber }}</strong>
+                    </div>
+                    <div>
+                      <p class="irish-life-detail-label">Product</p>
+                      <strong>{{ currentCase.productName }}</strong>
+                    </div>
+                    <div>
+                      <p class="irish-life-detail-label">Withdrawal amount</p>
+                      <strong>{{ currentCase.withdrawalAmount }}</strong>
+                    </div>
+                    <div>
+                      <p class="irish-life-detail-label">Destination account</p>
+                      <strong>Ending {{ currentCase.bankAccountLastFour }}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="irish-life-section-panel">
                   <p class="irish-life-detail-label">Case status timeline</p>
                   <div class="irish-life-status-list">
                     <div class="irish-life-status-item" *ngFor="let status of currentCase.statuses">
                       <div>
                         <strong>{{ status.label }}</strong>
-                        <p>{{ status.code }}</p>
                       </div>
                       <time>{{ status.at | date: 'medium' }}</time>
                     </div>
                   </div>
                 </div>
 
-                <div>
+                <div class="irish-life-section-panel">
                   <p class="irish-life-detail-label">Agent notifications</p>
                   <div class="irish-life-notification-list">
                     <div class="irish-life-notification-item" *ngFor="let notification of currentCase.notifications">
@@ -180,12 +194,9 @@ import {
                   <p class="irish-life-detail-label">Verifier comparison</p>
                   <div class="evidence-item" *ngFor="let detail of validationDetailsFromSummary(currentCase)">
                     <p class="evidence-name">{{ detail.label }}</p>
-                    <p><strong>Irish Life record:</strong> {{ detail.expected }}</p>
+                    <p><strong>Emerald Insurance record:</strong> {{ detail.expected }}</p>
                     <p><strong>Wallet:</strong> {{ detail.actual }}</p>
                   </div>
-                  <p class="evidence-note" *ngIf="disclosedClaimPathsFromCase(currentCase).length > 0">
-                    Disclosed claim paths: {{ disclosedClaimPathsFromCase(currentCase).join(', ') }}
-                  </p>
                 </div>
               </div>
             </mat-card-content>
@@ -207,23 +218,112 @@ import {
         gap: 1rem;
       }
 
-      .hero-headline,
+      .hero-headline {
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
+
       .timeline-grid,
       .content-grid {
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+      }
+
+      .content-grid > .irish-life-panel,
+      .timeline-grid > .irish-life-section-panel {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
       }
 
       .summary-grid {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       }
 
+      .monitor-summary {
+        background: linear-gradient(180deg, #edf4fb, #e3eef9);
+        border-color: #b9cde8;
+      }
+
+      .monitor-summary .summary-grid {
+        margin-bottom: 1.75rem;
+      }
+
+      .detail-summary-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        align-items: start;
+      }
+
+      .detail-summary-grid > div,
+      .compact-detail-grid > div {
+        display: grid;
+        align-content: start;
+        gap: 0.35rem;
+      }
+
+      .summary-detail-item {
+        grid-template-rows: auto auto;
+      }
+
+      .summary-detail-item-fixed {
+        grid-template-rows: minmax(calc(2.2rem + 1cm), auto) auto;
+      }
+
+      .summary-detail-item .irish-life-detail-label {
+        margin: 0;
+      }
+
+      .summary-detail-label-buffered {
+        min-height: calc(1.2rem + 1cm);
+      }
+
+      .summary-detail-value {
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        min-height: 0;
+      }
+
+      .summary-link-item {
+        justify-items: start;
+      }
+
+      .summary-grid strong,
+      .compact-detail-grid strong {
+        display: block;
+        color: var(--irish-life-ink);
+        font-size: 1.08rem;
+        font-weight: 650;
+      }
+
+      .summary-grid .irish-life-detail-label,
+      .compact-detail-grid .irish-life-detail-label {
+        color: #677b99;
+      }
+
       .detail-summary-grid {
         margin-bottom: 1rem;
       }
 
+      .compact-detail-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        align-items: start;
+        margin-bottom: 0;
+      }
+
+      .detail-summary-grid .inline-link {
+        display: inline-flex;
+        align-self: start;
+        justify-self: start;
+        margin: 0;
+        padding-inline: 0;
+        min-height: auto;
+      }
+
       .case-list-item {
-        justify-content: space-between;
-        padding: 0.9rem 1rem;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding: 1rem 1rem 1.15rem;
+        min-height: 6.4rem;
         border-radius: 16px;
         border-color: var(--irish-life-line);
       }
@@ -248,8 +348,14 @@ import {
 
       .case-meta,
       .case-status,
+      .case-status-inline,
       .empty-copy {
         color: #52617f;
+      }
+
+      .case-status-inline {
+        font-weight: 650;
+        color: #173a68;
       }
 
       .busy-state {
@@ -277,6 +383,30 @@ import {
       .evidence-item p,
       .evidence-note {
         margin: 0.2rem 0;
+      }
+
+      @media (max-width: 900px) {
+        .detail-summary-grid,
+        .compact-detail-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .summary-detail-item-fixed,
+        .compact-detail-grid > div:nth-child(-n + 3) {
+          grid-template-rows: auto;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .detail-summary-grid,
+        .compact-detail-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .summary-detail-item-fixed,
+        .compact-detail-grid > div:nth-child(-n + 3) {
+          grid-template-rows: auto;
+        }
       }
     `,
 	],
@@ -319,6 +449,10 @@ export class ExistingBusinessAgentComponent implements OnInit, OnDestroy {
 	}
 
 	failureReasonsFromSummary (summary: ExistingBusinessCaseSummary): string[] {
+    if (hasOnlyNonBlockingFailure(summary)) {
+      return [];
+    }
+
 		return buildFailureReasons(summary);
 	}
 
@@ -336,9 +470,13 @@ export class ExistingBusinessAgentComponent implements OnInit, OnDestroy {
       'Pending';
   }
 
-	disclosedClaimPathsFromCase (summary: ExistingBusinessCaseSummary): string[] {
-		return disclosedClaimPathsFromSummary(summary);
-	}
+  currentStatusLabel (summary: ExistingBusinessCaseSummary): string {
+    if (hasOnlyNonBlockingFailure(summary)) {
+      return 'Completed';
+    }
+
+    return getExistingBusinessCurrentStatusLabel(summary);
+  }
 
 	private loadCases (showLoading = true): void {
 		if (showLoading) {
@@ -355,7 +493,7 @@ export class ExistingBusinessAgentComponent implements OnInit, OnDestroy {
 			},
 			error: () => {
 				this.loading = false;
-				this.errorMessage = 'Unable to refresh the Existing Business monitor.';
+        this.errorMessage = 'Unable to refresh the Existing Business workspace.';
 				this.changeDetectorRef.detectChanges();
 			},
 		});

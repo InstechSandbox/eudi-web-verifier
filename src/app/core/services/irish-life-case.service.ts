@@ -153,6 +153,38 @@ export type CompleteExistingBusinessCaseRequest = {
   validation?: ExistingBusinessValidationSummary;
 };
 
+const FALLBACK_STATUS_LABELS: Record<string, string> = {
+  POLICY_SETUP: 'Case created',
+  AML_TRIGGERED: 'Checks started',
+  INVITE_SENT: 'Invitation sent',
+  PROOFS_RECEIVED: 'Proof received',
+  PROOFS_VERIFIED: 'Proof checked',
+  PROOFS_MATCHED: 'Details matched',
+  AML_STATUS_LOGGED: 'Checks logged',
+  CUSTOMER_NOTIFIED: 'Customer updated',
+  COMPLETED: 'Completed',
+  FAILED: 'Needs attention',
+  WITHDRAWAL_REQUEST_RECEIVED: 'Withdrawal request received',
+  AUTOMATED_CHECKS_STARTED: 'Checks started',
+  PROOF_INVITE_SENT: 'Wallet request sent',
+  POLICY_APPLICATION_MATCHED: 'Details matched',
+  AML_RECORD_NOT_FOUND: 'Checks completed',
+  AUTOMATED_DECISION_RECORDED: 'Decision recorded',
+};
+
+function resolveStatusLabel<T extends { code: string; label: string }> (currentStatus: string, statuses: T[]): string {
+  const matchingStatus = [...statuses].reverse().find((status) => status.code === currentStatus);
+  return matchingStatus?.label ?? FALLBACK_STATUS_LABELS[currentStatus] ?? currentStatus.replace(/_/g, ' ').toLowerCase();
+}
+
+export function getNewBusinessCurrentStatusLabel (summary: NewBusinessCaseSummary): string {
+  return resolveStatusLabel(summary.currentStatus, summary.statuses);
+}
+
+export function getExistingBusinessCurrentStatusLabel (summary: ExistingBusinessCaseSummary): string {
+  return resolveStatusLabel(summary.currentStatus, summary.statuses);
+}
+
 @Injectable({
 	providedIn: 'root',
 })

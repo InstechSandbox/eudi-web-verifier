@@ -2,7 +2,15 @@
   <div>
     <mat-card class="example-card">
       <mat-card-content>
-        <p *ngIf="showQrCode" style="text-align: center">
+        <div *ngIf="showQrCode" class="qr-hero-copy">
+          <p class="qr-title">Scan QR code to share your credentials</p>
+          <p class="qr-subtitle">
+            Open your wallet on your phone and scan this code. If you are already on the same
+            device, use the wallet button below.
+          </p>
+        </div>
+
+        <p *ngIf="showQrCode" class="qr-code-canvas">
           <qrcode
             [qrdata]="deepLinkTxt"
             [allowEmptyString]="false"
@@ -12,26 +20,24 @@
             [errorCorrectionLevel]="'L'"
             [margin]="2"
             [title]="deepLinkTxt"
-            [width]="300"
+            [width]="isCrossDevice ? 360 : 300"
             (qrCodeURL)="onChangeURL($event)"
           />
         </p>
 
         <mat-divider *ngIf="showQrCode" />
         <div class="below-qr-code">
-          <span *ngIf="showQrCode"
-            >Scan the
-            <a
-              [href]="qrCodeDownloadLink"
-              download="qrcode"
-              title="download as image"
-              >QR code</a
-            >
-            above with your phone
-          </span>
-          <p *ngIf="showQrCode">- OR -</p>
+          <a
+            *ngIf="showQrCode"
+            class="qr-download-link"
+            [href]="qrCodeDownloadLink"
+            download="qrcode"
+            title="download as image"
+            >Download QR code</a
+          >
+          <p *ngIf="showQrCode" class="or-divider">Or use this device</p>
           <a mat-raised-button class="authorize" [href]="deepLinkTxt"
-            >OPEN WITH YOUR WALLET</a
+            >Open with your wallet on your phone</a
           >
         </div>
 

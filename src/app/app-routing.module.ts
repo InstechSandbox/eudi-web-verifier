@@ -45,8 +45,8 @@ const routes: Routes = [
 	{
 		path: 'irish-life/existing-business/customer',
 		loadComponent: () =>
-			import('@features/irish-life/existing-business-customer-entry.component').then(
-				(c) => c.ExistingBusinessCustomerEntryComponent
+			import('@features/irish-life/existing-business-customer.component').then(
+				(c) => c.ExistingBusinessCustomerComponent
 			),
 	},
 	{

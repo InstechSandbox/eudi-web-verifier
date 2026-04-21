@@ -2,11 +2,12 @@
 
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-layout.component';
 import {
 	CompleteExistingBusinessCaseRequest,
 	ExistingBusinessCaseSummary,
+	getExistingBusinessCurrentStatusLabel,
 	ExistingBusinessValidationSummary,
 	IrishLifeCaseService,
 } from '@core/services/irish-life-case.service';
@@ -25,13 +26,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {
 	buildFailureReasons,
 	buildValidationDetails,
-	disclosedClaimPathsFromSummary,
+	hasOnlyNonBlockingFailure,
 	ValidationDetail,
 } from './new-business-validation-details';
 import {
 	buildIrishLifePidValidation,
 	collectIrishLifePidValidationReasons,
 } from './irish-life-pid-validation';
+import { timeout } from 'rxjs/operators';
+
+const SUPPORTED_DEMO_POLICY_NUMBER = '12345678';
 
 @Component({
 	selector: 'vc-existing-business-customer',
@@ -52,17 +56,14 @@ import {
     <vc-wallet-layout>
       <div body class="irish-life-theme irish-life-page" *ngIf="!loading; else loadingState">
         <section class="bg-panel irish-life-hero" *ngIf="caseSummary as currentCase">
-          <p class="irish-life-eyebrow">Existing Business Claims</p>
-          <h1 class="irish-life-display">Confirm your withdrawal request</h1>
-          <p>
-						Policy number: <strong>{{ currentCase.policyNumber }}</strong>
-					</p>
+					<p class="irish-life-eyebrow">Existing Business</p>
+					<h1 class="irish-life-display">Withdrawal request</h1>
 					<p>
-            Claim reference: <strong>{{ currentCase.claimReference }}</strong>
+						Request reference: <strong>{{ currentCase.claimReference }}</strong>
           </p>
           <p>
-						Your withdrawal request has been received. Irish Life is now asking for PID proof so
-						the release decision can be processed automatically.
+					The request is related to the following policy. Emerald Insurance needs your proof of
+					identity/address so the request can be checked automatically.
           </p>
         </section>
 
@@ -78,7 +79,7 @@ import {
                 <strong>{{ currentCase.productName }}</strong>
               </div>
               <div>
-                <p class="irish-life-detail-label">Withdrawal amount</p>
+							<p class="irish-life-detail-label">Requested amount</p>
                 <strong>{{ currentCase.withdrawalAmount }}</strong>
               </div>
               <div>
@@ -87,14 +88,14 @@ import {
               </div>
 							<div>
 								<p class="irish-life-detail-label">Request status</p>
-								<strong>{{ currentCase.currentStatus }}</strong>
+								<strong>{{ currentStatusLabel(currentCase) }}</strong>
 							</div>
             </div>
 
 						<div class="request-panel" *ngIf="!proofStepStarted && !processingResult && !isTerminalState(currentCase)">
               <p>
-								Preparing your wallet proof request. If it does not appear automatically, refresh
-								this page.
+							Getting your secure share request ready. If it does not appear automatically,
+							refresh this page.
 							</p>
             </div>
 
@@ -104,19 +105,19 @@ import {
 
             <div class="empty-state" *ngIf="!currentCase.activeTransaction && !isTerminalState(currentCase)">
               <p>
-								The verifier has not finished preparing the wallet proof request yet. Refresh this
-								page in a moment if the proof handoff does not appear.
+							The wallet request is still being prepared. Refresh this page in a moment if the
+							share options do not appear.
               </p>
             </div>
 
             <div class="progress-state" *ngIf="processingResult">
               <mat-spinner diameter="34"></mat-spinner>
-              <p>Validating your proof and recording the automated claims outcome.</p>
+							<p>Checking your proof and updating the request.</p>
             </div>
 
             <div *ngIf="shouldShowTerminalResult(currentCase)">
               <mat-divider></mat-divider>
-              <div class="irish-life-result-banner" [class.success]="caseSummary.currentStatus === 'COMPLETED'" [class.failure]="caseSummary.currentStatus === 'FAILED'">
+			  <div class="irish-life-result-banner" [class.success]="isDisplaySuccessful(caseSummary)" [class.failure]="!isDisplaySuccessful(caseSummary) && caseSummary.currentStatus === 'FAILED'">
                 <strong>{{ resultHeadline }}</strong>
                 <p>{{ resultMessage }}</p>
               </div>
@@ -132,16 +133,13 @@ import {
                   <p><strong>Application:</strong> {{ detail.expected }}</p>
                   <p><strong>Wallet:</strong> {{ detail.actual }}</p>
                 </div>
-                <p class="evidence-note" *ngIf="disclosedClaimPaths.length > 0">
-                  Disclosed claim paths: {{ disclosedClaimPaths.join(', ') }}
-                </p>
               </div>
 
               <vc-presentations-results *ngIf="concludedTransaction" [concludedTransaction]="concludedTransaction"></vc-presentations-results>
 
 						<div class="actions-row" *ngIf="caseSummary.currentStatus !== 'FAILED'">
 							<a routerLink="/irish-life/existing-business/customer" class="irish-life-ghost-link inline-link">
-								Start another withdrawal request
+								Review another policy
 							</a>
 						</div>
             </div>
@@ -152,7 +150,7 @@ import {
       <ng-template #loadingState>
         <div body class="loading-block">
           <mat-spinner diameter="36"></mat-spinner>
-          <p>Loading Irish Life claim details...</p>
+						<p>Loading your Emerald Insurance policy details...</p>
         </div>
       </ng-template>
     </vc-wallet-layout>
@@ -163,10 +161,70 @@ import {
 
       .request-summary {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 1rem;
         margin-bottom: 1rem;
       }
+
+			.request-summary > div {
+				display: grid;
+				align-content: start;
+				gap: 0.35rem;
+			}
+
+			.request-summary > div:nth-child(-n + 3) {
+				grid-template-rows: minmax(3.1rem, auto) auto;
+			}
+
+			.request-summary > div:nth-child(-n + 3) {
+				grid-column: span 2;
+			}
+
+			.request-summary > div:nth-child(n + 4) {
+				grid-column: span 3;
+			}
+
+			.request-summary strong {
+				display: block;
+				color: var(--irish-life-ink);
+				font-size: 1.08rem;
+				font-weight: 650;
+			}
+
+			.request-summary .irish-life-detail-label {
+				color: #677b99;
+			}
+
+			.request-summary > div:nth-child(-n + 3) .irish-life-detail-label {
+				min-height: 0;
+				display: block;
+			}
+
+			@media (max-width: 900px) {
+				.request-summary {
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+				}
+
+				.request-summary > div:nth-child(-n + 3),
+				.request-summary > div:nth-child(n + 4) {
+					grid-column: span 1;
+				}
+
+				.request-summary > div:nth-child(-n + 3) {
+					grid-template-rows: auto;
+				}
+
+				.request-summary > div:nth-child(-n + 3) .irish-life-detail-label {
+					min-height: 0;
+					display: block;
+				}
+			}
+
+			@media (max-width: 640px) {
+				.request-summary {
+					grid-template-columns: minmax(0, 1fr);
+				}
+			}
 
       .request-panel,
       .progress-state,
@@ -195,7 +253,11 @@ import {
         flex-wrap: wrap;
       }
 
-      .proof-shell { margin-top: 1rem; }
+			.proof-shell { margin-top: 1rem; }
+			::ng-deep vc-qr-code .example-card {
+				border: 2px solid rgba(47, 105, 188, 0.4);
+				box-shadow: 0 18px 40px rgba(24, 52, 95, 0.1);
+			}
       .validation-list { margin: 0 0 1rem; padding-left: 1.1rem; }
       .evidence-item + .evidence-item { margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px solid rgba(0, 0, 0, 0.08); }
       .evidence-name, .evidence-item p, .evidence-note { margin: 0.2rem 0; }
@@ -216,6 +278,7 @@ export class ExistingBusinessCustomerComponent implements OnInit {
 
 	constructor (
     private readonly activeRoute: ActivatedRoute,
+		private readonly router: Router,
     private readonly caseService: IrishLifeCaseService,
     private readonly localStorageService: LocalStorageService,
     private readonly verifierEndpointService: VerifierEndpointService,
@@ -225,13 +288,30 @@ export class ExistingBusinessCustomerComponent implements OnInit {
 	ngOnInit (): void {
 		const caseId = this.activeRoute.snapshot.paramMap.get('caseId');
 		if (!caseId) {
-			this.loading = false;
-			this.resultHeadline = 'Withdrawal request missing';
-			this.resultMessage = 'Start from the withdrawal request page and enter a supported policy number.';
+			this.createDemoCase();
 			return;
 		}
 
 		this.loadCase(caseId);
+	}
+
+	private createDemoCase (): void {
+		this.loading = true;
+		this.caseService.createExistingBusinessCase({policyNumber: SUPPORTED_DEMO_POLICY_NUMBER})
+			.pipe(timeout(15000))
+			.subscribe({
+				next: (summary) => {
+					void this.router.navigate(['/irish-life/existing-business/customer', summary.caseId], {
+						replaceUrl: true,
+					});
+				},
+				error: () => {
+					this.loading = false;
+					this.resultHeadline = 'Policy details unavailable';
+					this.resultMessage = 'Emerald Insurance could not open the policy details for this journey.';
+					this.changeDetectorRef.detectChanges();
+				},
+			});
 	}
 
 	startProofStep (): void {
@@ -281,7 +361,7 @@ export class ExistingBusinessCustomerComponent implements OnInit {
 			error: () => {
 				this.loading = false;
 				this.resultHeadline = 'Withdrawal request not found';
-				this.resultMessage = 'The requested Irish Life withdrawal request could not be loaded.';
+				this.resultMessage = 'The requested Emerald Insurance request could not be loaded.';
 				this.changeDetectorRef.detectChanges();
 			},
 		});
@@ -373,11 +453,18 @@ export class ExistingBusinessCustomerComponent implements OnInit {
 	private applyPersistedOutcome (summary: ExistingBusinessCaseSummary): void {
 		this.validationReasons = buildFailureReasons(summary);
 		this.validationDetails = buildValidationDetails(summary);
-		this.disclosedClaimPaths = disclosedClaimPathsFromSummary(summary);
+		this.disclosedClaimPaths = [];
 
 		if (summary.currentStatus === 'COMPLETED') {
 			this.resultHeadline = 'Withdrawal checks completed';
-			this.resultMessage = 'Irish Life has verified your PID and released the automated claims decision.';
+			this.resultMessage = 'Emerald Insurance has checked your PID and completed the automated decision.';
+			return;
+		}
+
+		if (summary.currentStatus === 'FAILED' && hasOnlyNonBlockingFailure(summary)) {
+			this.resultHeadline = 'Withdrawal checks completed';
+			this.resultMessage = 'Emerald Insurance has checked your PID and completed the automated decision.';
+			this.validationReasons = [];
 			return;
 		}
 
@@ -391,5 +478,17 @@ export class ExistingBusinessCustomerComponent implements OnInit {
 
 		this.resultHeadline = '';
 		this.resultMessage = '';
+	}
+
+	protected currentStatusLabel (summary: ExistingBusinessCaseSummary): string {
+		if (hasOnlyNonBlockingFailure(summary)) {
+			return 'Completed';
+		}
+
+		return getExistingBusinessCurrentStatusLabel(summary);
+	}
+
+	protected isDisplaySuccessful (summary: ExistingBusinessCaseSummary): boolean {
+		return summary.currentStatus === 'COMPLETED' || hasOnlyNonBlockingFailure(summary);
 	}
 }

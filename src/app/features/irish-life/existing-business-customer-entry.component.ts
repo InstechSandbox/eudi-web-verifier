@@ -32,11 +32,17 @@ const SUPPORTED_DEMO_POLICY_NUMBER = '12345678';
 	template: `
     <vc-wallet-layout>
       <div body class="irish-life-theme irish-life-page">
-        <mat-card class="bg-panel irish-life-panel">
-          <p class="irish-life-eyebrow">Existing Business Claims</p>
-          <h1 class="irish-life-display">Request a withdrawal</h1>
+        <section class="bg-panel irish-life-hero">
+          <p class="irish-life-eyebrow">Existing Business</p>
+          <h1 class="irish-life-display">Withdrawal request</h1>
           <p>
-            Enter your policy number to start the automated Irish Life withdrawal journey. The
+            Start the withdrawal request below and we will prepare the wallet proof step automatically.
+          </p>
+        </section>
+
+        <mat-card class="bg-panel irish-life-panel">
+          <p>
+            Enter your policy number to start the automated Emerald Insurance withdrawal journey. The
             verifier will immediately prepare the wallet proof request and move you into proof
             sharing without agent intervention.
           </p>
@@ -69,6 +75,7 @@ const SUPPORTED_DEMO_POLICY_NUMBER = '12345678';
 	styles: [
 		`
       :host { display: block; }
+  .irish-life-panel { margin-top: 1rem; }
       .entry-form { margin-top: 1.25rem; display: grid; gap: 1rem; }
       .actions-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
       .hint { color: #2f4672; margin: 0.75rem 0 0; }

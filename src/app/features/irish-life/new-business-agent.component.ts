@@ -7,6 +7,7 @@ import { RouterLink } from '@angular/router';
 import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-layout.component';
 import {
 	CreateNewBusinessCaseRequest,
+  getNewBusinessCurrentStatusLabel,
 	IrishLifeCaseService,
 	NewBusinessCaseSummary,
 } from '@core/services/irish-life-case.service';
@@ -23,7 +24,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {
 	buildFailureReasons,
 	buildValidationDetails,
-	disclosedClaimPathsFromSummary,
+  hasOnlyNonBlockingFailure,
 } from './new-business-validation-details';
 
 @Component({
@@ -50,9 +51,9 @@ import {
           <p class="eyebrow irish-life-eyebrow">New Business</p>
           <div class="hero-headline">
             <div>
-              <h1 class="irish-life-display">Agent orchestration workspace</h1>
+              <h1 class="irish-life-display">Agent new business workspace</h1>
               <p>
-                Create the case, issue the wallet invite, and track the proof journey to completion.
+                Create the case, send the proof request, and track progress to completion.
               </p>
             </div>
             <a routerLink="/irish-life" class="ghost-link irish-life-ghost-link">Back to journey selector</a>
@@ -63,38 +64,36 @@ import {
           <mat-card class="panel irish-life-panel">
             <mat-card-header>
               <mat-card-title>New Business case</mat-card-title>
-              <mat-card-subtitle>
-                Support-agent entry point for the Irish Life verification flow
-              </mat-card-subtitle>
+              <mat-card-subtitle class="blank-subtitle" aria-hidden="true">&nbsp;</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
               <form [formGroup]="form" class="form-grid">
-                <mat-form-field appearance="outline">
+                <mat-form-field appearance="outline" class="irish-life-soft-input">
                   <mat-label>Policy reference</mat-label>
                   <input matInput formControlName="policyReference" />
                 </mat-form-field>
 
-                <mat-form-field appearance="outline">
+                <mat-form-field appearance="outline" class="irish-life-soft-input">
                   <mat-label>Customer given name</mat-label>
                   <input matInput formControlName="customerGivenName" />
                 </mat-form-field>
 
-                <mat-form-field appearance="outline">
+                <mat-form-field appearance="outline" class="irish-life-soft-input">
                   <mat-label>Customer family name</mat-label>
                   <input matInput formControlName="customerFamilyName" />
                 </mat-form-field>
 
-                <mat-form-field appearance="outline">
+                <mat-form-field appearance="outline" class="irish-life-soft-input">
                   <mat-label>Customer email</mat-label>
                   <input matInput type="email" formControlName="customerEmail" />
                 </mat-form-field>
 
-                <mat-form-field appearance="outline">
+                <mat-form-field appearance="outline" class="irish-life-soft-input">
                   <mat-label>Date of birth</mat-label>
                   <input matInput type="date" formControlName="customerBirthDate" />
                 </mat-form-field>
 
-                <mat-form-field appearance="outline" class="wide-field">
+                <mat-form-field appearance="outline" class="wide-field irish-life-soft-input">
                   <mat-label>Current address</mat-label>
                   <textarea
                     matInput
@@ -102,11 +101,7 @@ import {
                     formControlName="customerAddress"
                     placeholder="1 Main Street, Dublin, Leinster, D02 XY56"
                   ></textarea>
-                  <mat-hint>
-                    For the local PID proof-of-address flow, match the issued wallet PID exactly. If you used the
-                    optional structured address fields in the issuer, enter this as
-                    street_address, locality, region, postal_code.
-                  </mat-hint>
+                  <mat-hint class="blank-hint" aria-hidden="true">&nbsp;</mat-hint>
                 </mat-form-field>
               </form>
 
@@ -143,29 +138,33 @@ import {
           <mat-card class="panel irish-life-panel" *ngIf="caseSummary as currentCase">
             <mat-card-header>
               <mat-card-title>{{ currentCase.policyReference }}</mat-card-title>
-              <mat-card-subtitle>Current state: {{ currentCase.currentStatus }}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-              <div class="status-list irish-life-status-list">
+              <div class="irish-life-section-panel section-block">
+                <p class="detail-label irish-life-detail-label">Status history</p>
+                <div class="status-list irish-life-status-list">
                 <div class="status-item irish-life-status-item" *ngFor="let status of currentCase.statuses">
                   <div>
                     <strong>{{ status.label }}</strong>
-                    <p>{{ status.code }}</p>
                   </div>
                   <time>{{ status.at | date: 'medium' }}</time>
                 </div>
               </div>
+              </div>
 
               <mat-divider></mat-divider>
 
-              <div class="detail-block">
-                <p class="detail-label irish-life-detail-label">Customer proof page</p>
-                <a [href]="currentCase.customerPortalUrl" target="_blank" rel="noreferrer">
-                  {{ currentCase.customerPortalUrl }}
-                </a>
-              </div>
-
-              <div class="qr-panel" *ngIf="currentCase.customerPortalUrl">
+              <div class="qr-panel irish-life-section-panel" *ngIf="currentCase.customerPortalUrl">
+                <div class="qr-panel-copy">
+                  <p class="detail-label irish-life-detail-label">Present to customer</p>
+                  <p class="qr-panel-note">
+                    If the customer is present, they may scan the QR code to commence the customer journey.
+                    Or click on the link below. We will also email the invitation to the customer
+                  </p>
+                  <a [href]="currentCase.customerPortalUrl" target="_blank" rel="noreferrer" class="irish-life-ghost-link inline-link">
+                    Open customer page
+                  </a>
+                </div>
                 <qrcode
                   [qrdata]="currentCase.customerPortalUrl"
                   [width]="190"
@@ -199,15 +198,12 @@ import {
                       <p><strong>Application:</strong> {{ detail.expected }}</p>
                       <p><strong>Wallet:</strong> {{ detail.actual }}</p>
                     </div>
-                    <p class="evidence-note" *ngIf="disclosedClaimPathsFromCase(currentCase).length > 0">
-                      Disclosed claim paths: {{ disclosedClaimPathsFromCase(currentCase).join(', ') }}
-                    </p>
                   </div>
                 </div>
               </ng-container>
 
               <ng-template #failureReasonText>
-                <p class="error" *ngIf="currentCase.failureReason">{{ currentCase.failureReason }}</p>
+                <p class="error" *ngIf="currentCase.failureReason && !hasOnlyNonBlockingFailureReason(currentCase)">{{ currentCase.failureReason }}</p>
               </ng-template>
             </mat-card-content>
           </mat-card>
@@ -228,13 +224,22 @@ import {
 
       .content-grid {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 1rem;
+        width: 100%;
+      }
+
+      .panel {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
       }
 
       .form-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 0.85rem;
+        margin-bottom: 2.75rem;
       }
 
       .wide-field {
@@ -245,8 +250,29 @@ import {
         display: flex;
         align-items: center;
         gap: 0.8rem;
-        margin-top: 1rem;
+        margin-top: 0;
         flex-wrap: wrap;
+      }
+
+      ::ng-deep .irish-life-soft-input .mat-mdc-text-field-wrapper {
+        background: #edf3f7;
+        border-radius: 14px;
+      }
+
+      ::ng-deep .irish-life-soft-input .mdc-notched-outline__leading,
+      ::ng-deep .irish-life-soft-input .mdc-notched-outline__notch,
+      ::ng-deep .irish-life-soft-input .mdc-notched-outline__trailing {
+        border-color: #c9d6e4;
+      }
+
+      ::ng-deep .irish-life-soft-input.mat-focused .mdc-notched-outline__leading,
+      ::ng-deep .irish-life-soft-input.mat-focused .mdc-notched-outline__notch,
+      ::ng-deep .irish-life-soft-input.mat-focused .mdc-notched-outline__trailing {
+        border-color: #7f9bc0;
+      }
+
+      ::ng-deep .irish-life-soft-input .mat-mdc-form-field-subscript-wrapper {
+        margin-top: 0.35rem;
       }
 
       .busy-state {
@@ -255,9 +281,16 @@ import {
         gap: 0.6rem;
         color: #445272;
         font-size: 0.95rem;
+        flex: 1 1 100%;
+      }
+
+      .blank-subtitle,
+      .blank-hint {
+        visibility: hidden;
       }
 
       .status-list { margin-bottom: 1rem; }
+      .section-block { margin-bottom: 1rem; }
 
       .status-item p,
       .detail-block p {
@@ -268,10 +301,24 @@ import {
       .qr-panel {
         margin: 1.2rem 0;
         padding: 1rem;
-        border-radius: 16px;
-        background: linear-gradient(180deg, #f1f6fd, var(--irish-life-paper));
-        border: 1px solid var(--irish-life-line);
+        display: grid;
+        justify-items: center;
+        gap: 0.9rem;
         text-align: center;
+      }
+
+      .qr-panel-copy {
+        display: grid;
+        gap: 0.7rem;
+        justify-items: center;
+      }
+
+      .qr-panel-note {
+        margin: 0;
+        max-width: 34rem;
+        font-size: 0.96rem;
+        line-height: 1.5;
+        color: #52617f;
       }
 
       .detail-grid {
@@ -489,6 +536,10 @@ export class NewBusinessAgentComponent implements OnDestroy {
 	}
 
 	protected failureReasonsFromSummary (summary: NewBusinessCaseSummary): string[] {
+    if (hasOnlyNonBlockingFailure(summary)) {
+      return [];
+    }
+
 		return buildFailureReasons(summary);
 	}
 
@@ -496,7 +547,15 @@ export class NewBusinessAgentComponent implements OnDestroy {
 		return buildValidationDetails(summary);
 	}
 
-	protected disclosedClaimPathsFromCase (summary: NewBusinessCaseSummary): string[] {
-		return disclosedClaimPathsFromSummary(summary);
+  protected hasOnlyNonBlockingFailureReason (summary: NewBusinessCaseSummary): boolean {
+    return hasOnlyNonBlockingFailure(summary);
 	}
+
+  protected currentStatusLabel (summary: NewBusinessCaseSummary): string {
+    if (hasOnlyNonBlockingFailure(summary)) {
+      return 'Completed';
+    }
+
+    return getNewBusinessCurrentStatusLabel(summary);
+  }
 }

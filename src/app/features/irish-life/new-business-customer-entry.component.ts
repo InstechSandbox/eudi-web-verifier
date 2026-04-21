@@ -24,23 +24,29 @@ import { MatInputModule } from '@angular/material/input';
 	template: `
     <vc-wallet-layout>
       <div body class="page irish-life-theme irish-life-page">
-        <mat-card class="panel bg-panel irish-life-panel">
-          <p class="eyebrow irish-life-eyebrow">Customer entry</p>
-          <h1 class="irish-life-display">Open your New Business proof page</h1>
+        <section class="bg-panel irish-life-hero">
+          <p class="irish-life-eyebrow">New Business</p>
+          <h1 class="irish-life-display">Open your proof page</h1>
           <p>
-            If you received an Irish Life email, use the direct link there. Otherwise enter the
-            case ID from that link or from the agent workspace.
+            Use the customer link from your email or enter the case ID below to continue your proof request.
+          </p>
+        </section>
+
+        <mat-card class="panel bg-panel irish-life-panel">
+          <p>
+            If you received an Emerald Insurance email, use that direct link. Otherwise enter the
+            case ID from the email or the agent workspace.
           </p>
 
           <form [formGroup]="form" class="entry-form" (ngSubmit)="openCase()">
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" class="irish-life-soft-input">
               <mat-label>Case ID</mat-label>
               <input matInput formControlName="caseId" />
             </mat-form-field>
 
             <div class="actions-row">
               <button mat-flat-button color="primary" class="brand-button" type="submit" [disabled]="form.invalid">
-                Continue to proof sharing
+                Open proof page
               </button>
               <a routerLink="/irish-life" class="ghost-link irish-life-ghost-link inline-link">Back to selector</a>
             </div>
@@ -58,42 +64,43 @@ import { MatInputModule } from '@angular/material/input';
         display: block;
       }
       .page { padding-top: 1.5rem; }
-      .panel {
-        border-radius: 20px;
-        border: 1px solid rgba(36, 87, 166, 0.08);
-        box-shadow: 0 18px 44px rgba(24, 52, 95, 0.09);
-      }
-      h1 {
-        margin: 0;
-        font-family: Georgia, 'Times New Roman', serif;
-        font-size: clamp(1.9rem, 4vw, 2.8rem);
-      }
-      .eyebrow {
-        margin: 0 0 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        font-size: 0.72rem;
-        font-weight: 700;
-      }
+      .panel { margin-top: 1rem; }
       .entry-form {
         margin-top: 1.25rem;
         display: grid;
         gap: 1rem;
+      }
+
+      ::ng-deep .irish-life-soft-input .mat-mdc-text-field-wrapper {
+        background: #edf3f7;
+        border-radius: 14px;
+      }
+
+      ::ng-deep .irish-life-soft-input .mdc-notched-outline__leading,
+      ::ng-deep .irish-life-soft-input .mdc-notched-outline__notch,
+      ::ng-deep .irish-life-soft-input .mdc-notched-outline__trailing {
+        border-color: #c9d6e4;
+      }
+
+      ::ng-deep .irish-life-soft-input.mat-focused .mdc-notched-outline__leading,
+      ::ng-deep .irish-life-soft-input.mat-focused .mdc-notched-outline__notch,
+      ::ng-deep .irish-life-soft-input.mat-focused .mdc-notched-outline__trailing {
+        border-color: #7f9bc0;
       }
       .actions-row {
         display: flex;
         gap: 0.75rem;
         align-items: center;
       }
-      .brand-button {
-        background: var(--irish-life-blue);
-        color: white;
-      }
+      .brand-button { color: white; }
       .brand-button[disabled] {
         background: #d6ddea;
         color: #67748f;
       }
       .ghost-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.25rem;
         text-decoration: none;
         color: var(--irish-life-navy);
         font-weight: 700;

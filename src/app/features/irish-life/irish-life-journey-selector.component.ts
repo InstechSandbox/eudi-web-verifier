@@ -9,56 +9,56 @@ import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-lay
 	imports: [CommonModule, RouterLink, WalletLayoutComponent],
 	template: `
     <vc-wallet-layout>
-      <div body class="irish-life-shell irish-life-theme irish-life-page">
+      <div body class="irish-life-shell irish-life-theme">
         <section class="hero bg-panel irish-life-hero">
-          <p class="eyebrow irish-life-eyebrow">Irish Life verifier</p>
-          <h1 class="irish-life-display">Dual-surface proof journeys for Irish Life</h1>
+          <p class="eyebrow irish-life-eyebrow">Emerald Insurance verifier</p>
+          <h1 class="irish-life-display">Emerald Insurance journeys</h1>
           <p class="lede">
-            Start from the agent workflow or go directly to the customer proof page.
-            The verifier keeps both surfaces aligned on the same case state.
+            Choose the agent workspace or open the customer page directly.
+            Each journey keeps the customer and agent views aligned on the same case.
           </p>
         </section>
 
         <section class="journey-grid">
-          <article class="journey-card primary">
+          <article class="journey-card muted placeholder journey-two">
             <p class="label">Journey 1</p>
-            <h2>New Business Agent</h2>
+            <h2>Existing Business agent monitor</h2>
             <p>
-              Create a case, trigger AML, send the invite, and monitor proof collection.
+              Follow customer-led account checks with automatic PID proof sharing and a read-only monitor.
+            </p>
+            <a routerLink="/irish-life/existing-business/agent" class="journey-link">Open agent monitoring workspace</a>
+          </article>
+
+          <article class="journey-card accent journey-two">
+            <p class="label">Journey 1</p>
+            <h2>Existing Business customer</h2>
+            <p>
+              Open a prefilled policy view and continue straight into wallet proof sharing.
+            </p>
+            <a routerLink="/irish-life/existing-business/customer" class="journey-link">
+              Open customer journey
+            </a>
+          </article>
+
+          <article class="journey-card primary journey-one">
+            <p class="label">Journey 2</p>
+            <h2>New Business agent</h2>
+            <p>
+              Create a case, send the proof request, and monitor progress.
             </p>
             <a routerLink="/irish-life/new-business/agent" class="journey-link">
               Open agent workspace
             </a>
           </article>
 
-          <article class="journey-card accent">
-            <p class="label">Customer entry</p>
-            <h2>New Business Customer</h2>
+          <article class="journey-card accent journey-one">
+            <p class="label">Journey 2</p>
+            <h2>New Business customer</h2>
             <p>
-              Enter a case reference or open the customer flow from an emailed link.
+              Open the proof page from an email link or enter the case ID here.
             </p>
             <a routerLink="/irish-life/new-business/customer" class="journey-link">
-              Open customer proof page
-            </a>
-          </article>
-
-          <article class="journey-card muted placeholder">
-            <p class="label">Journey 2</p>
-            <h2>Existing Business Claims</h2>
-            <p>
-              Customer-led withdrawal request with automatic PID proof handoff and a read-only agent monitor.
-            </p>
-            <a routerLink="/irish-life/existing-business/agent" class="journey-link">Open monitoring workspace</a>
-          </article>
-
-          <article class="journey-card accent">
-            <p class="label">Customer entry</p>
-            <h2>Existing Business Customer</h2>
-            <p>
-              Enter your policy number, request the withdrawal, and continue directly into wallet proof sharing.
-            </p>
-            <a routerLink="/irish-life/existing-business/customer" class="journey-link">
-              Start customer journey
+              Open customer journey
             </a>
           </article>
         </section>
@@ -70,14 +70,14 @@ import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-lay
       :host { display: block; }
 
       .irish-life-shell {
-        overflow: hidden;
+        padding: 1.5rem 0 2rem;
       }
 
       .eyebrow,
       .label {
         text-transform: uppercase;
         letter-spacing: 0.12em;
-        font-size: 0.72rem;
+        font-size: 0.96rem;
         font-weight: 700;
         margin: 0 0 0.75rem;
       }
@@ -88,23 +88,39 @@ import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-lay
       h1 { max-width: 11ch; }
 
       .lede {
-        color: rgba(255, 255, 255, 0.86);
+        color: var(--irish-life-ink-strong);
         max-width: 34rem;
         margin: 1rem 0 0;
-        font-size: 1rem;
+        font-size: 1.125rem;
+        line-height: 1.6;
+        font-weight: 700;
       }
 
       .journey-grid {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 1rem;
+        width: 100%;
       }
 
       .journey-card {
+        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
         border-radius: 20px;
-        padding: 1.4rem;
+        padding: 1.5rem;
         background: white;
         border: 1px solid rgba(36, 87, 166, 0.08);
         box-shadow: 0 18px 48px rgba(24, 52, 95, 0.08);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .journey-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 6px;
       }
 
       .journey-card.primary {
@@ -120,27 +136,38 @@ import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-lay
         color: #445272;
       }
 
+      .journey-card.journey-one::before {
+        background: linear-gradient(180deg, var(--irish-life-blue), #8cb6ee);
+      }
+
+      .journey-card.journey-two::before {
+        background: linear-gradient(180deg, #6d8ebc, #d0dceb);
+      }
+
       .journey-card h2 {
-        font-size: 1.7rem;
+        font-size: 1.9rem;
         color: var(--irish-life-ink);
       }
 
       .journey-card p {
         margin: 0.9rem 0 1.2rem;
+        font-size: 1.05rem;
+        line-height: 1.65;
       }
 
       .journey-link {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 2.75rem;
-        padding: 0 1rem;
+        min-height: 3.2rem;
+        padding: 0.3rem 1.3rem;
         border-radius: 999px;
-        background: var(--irish-life-blue);
+        background: linear-gradient(180deg, var(--irish-life-blue), var(--irish-life-blue-deep));
         color: white;
         text-decoration: none;
-        font-weight: 700;
-        box-shadow: 0 10px 24px rgba(36, 87, 166, 0.18);
+        font-weight: 800;
+        font-size: 1.05rem;
+        box-shadow: 0 14px 26px rgba(36, 87, 166, 0.22);
       }
 
       .journey-link.disabled {

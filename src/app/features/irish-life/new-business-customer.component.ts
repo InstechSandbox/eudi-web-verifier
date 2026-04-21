@@ -25,7 +25,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {
 	buildFailureReasons,
 	buildValidationDetails,
-	disclosedClaimPathsFromSummary,
+	hasOnlyNonBlockingFailure,
 	ValidationDetail,
 } from './new-business-validation-details';
 import {
@@ -52,21 +52,18 @@ import {
     <vc-wallet-layout>
 			<div body class="page irish-life-theme irish-life-page" *ngIf="!loading; else loadingState">
 				<section class="hero bg-panel irish-life-hero" *ngIf="caseSummary as currentCase">
-					<p class="eyebrow irish-life-eyebrow">Customer proof page</p>
-					<h1 class="irish-life-display">Share your identity proof for Irish Life</h1>
+					<p class="eyebrow irish-life-eyebrow">New Business</p>
+					<h1 class="irish-life-display">Share your proof with Emerald Insurance</h1>
           <p>
             Case reference: <strong>{{ currentCase.policyReference }}</strong>
           </p>
           <p>
-            We will ask for your PID so Irish Life can confirm your name, date of birth,
-            address, and credential validity.
+						We will ask your digital wallet to share your name, date of birth, address, and credential validity.
           </p>
         </section>
 
 				<mat-card class="panel irish-life-panel" *ngIf="caseSummary as currentCase">
           <mat-card-content>
-			<p class="detail-label irish-life-detail-label">Current status</p>
-			<h2 class="irish-life-heading">{{ currentCase.currentStatus }}</h2>
 			<p *ngIf="shouldShowInlineFailureReason(currentCase)" class="error">{{ currentCase.failureReason }}</p>
 
             <div class="actions-row" *ngIf="!concludedTransaction && currentCase.activeTransaction && !isTerminalState(currentCase)">
@@ -93,7 +90,7 @@ import {
 
             <div *ngIf="shouldShowTerminalResult(currentCase)">
               <mat-divider></mat-divider>
-							<div class="result-banner irish-life-result-banner" [class.success]="caseSummary.currentStatus === 'COMPLETED'" [class.failure]="caseSummary.currentStatus === 'FAILED'">
+							  <div class="result-banner irish-life-result-banner" [class.success]="isDisplaySuccessful(caseSummary)" [class.failure]="!isDisplaySuccessful(caseSummary) && caseSummary.currentStatus === 'FAILED'">
                 <strong>{{ resultHeadline }}</strong>
                 <p>{{ resultMessage }}</p>
               </div>
@@ -109,9 +106,6 @@ import {
                   <p><strong>Application:</strong> {{ detail.expected }}</p>
                   <p><strong>Wallet:</strong> {{ detail.actual }}</p>
                 </div>
-                <p class="evidence-note" *ngIf="disclosedClaimPaths.length > 0">
-                  Disclosed claim paths: {{ disclosedClaimPaths.join(', ') }}
-                </p>
               </div>
 
               <vc-presentations-results *ngIf="concludedTransaction" [concludedTransaction]="concludedTransaction"></vc-presentations-results>
@@ -123,7 +117,7 @@ import {
       <ng-template #loadingState>
         <div body class="loading-block">
           <mat-spinner diameter="36"></mat-spinner>
-          <p>Loading Irish Life case details...</p>
+					<p>Loading your Emerald Insurance case details...</p>
         </div>
       </ng-template>
     </vc-wallet-layout>
@@ -135,6 +129,11 @@ import {
       .proof-shell {
         margin-top: 1rem;
       }
+
+			::ng-deep vc-qr-code .example-card {
+				border: 2px solid rgba(47, 105, 188, 0.4);
+				box-shadow: 0 18px 40px rgba(24, 52, 95, 0.1);
+			}
 
       .progress-state,
       .loading-block,
@@ -244,7 +243,7 @@ export class NewBusinessCustomerComponent implements OnInit {
 			error: () => {
 				this.loading = false;
 				this.resultHeadline = 'Case not found';
-				this.resultMessage = 'The requested Irish Life case could not be loaded.';
+				this.resultMessage = 'The requested Emerald Insurance case could not be loaded.';
 				this.changeDetectorRef.detectChanges();
 			},
 		});
@@ -356,15 +355,24 @@ export class NewBusinessCustomerComponent implements OnInit {
 			return false;
 		}
 
+		if (hasOnlyNonBlockingFailure(summary)) {
+			return false;
+		}
+
 		return !this.isTerminalState(summary) ||
 			(this.validationReasons.length === 0 && this.validationDetails.length === 0);
 	}
 
 	private applyPersistedOutcome (summary: NewBusinessCaseSummary): void {
 		this.validationDetails = buildValidationDetails(summary);
-		this.disclosedClaimPaths = disclosedClaimPathsFromSummary(summary);
+		this.disclosedClaimPaths = [];
 
 		if (summary.currentStatus === 'COMPLETED') {
+			this.applyCompletedOutcome(summary);
+			return;
+		}
+
+		if (summary.currentStatus === 'FAILED' && hasOnlyNonBlockingFailure(summary)) {
 			this.applyCompletedOutcome(summary);
 			return;
 		}
@@ -379,9 +387,7 @@ export class NewBusinessCustomerComponent implements OnInit {
 
 	private applyCompletedOutcome (summary: NewBusinessCaseSummary): void {
 		this.resultHeadline = 'Proof accepted';
-		this.resultMessage = summary.completionEmailSent ?
-			'Your proof has been accepted and a completion email has been sent.' :
-			'Your proof has been accepted. The backend did not report a completion email as sent.';
+		this.resultMessage = 'Your proof has been accepted and the policy details matched your proof.';
 		this.validationReasons = [];
 	}
 
@@ -393,5 +399,9 @@ export class NewBusinessCustomerComponent implements OnInit {
 			this.validationDetails.length > 0 ?
 				'The proof did not match the application details shown below.' :
 				summary.failureReason || 'The proof could not be validated for this case.';
+	}
+
+	protected isDisplaySuccessful (summary: NewBusinessCaseSummary): boolean {
+		return summary.currentStatus === 'COMPLETED' || hasOnlyNonBlockingFailure(summary);
 	}
 }

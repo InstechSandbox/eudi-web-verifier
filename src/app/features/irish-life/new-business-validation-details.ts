@@ -29,6 +29,11 @@ type ValidationFieldConfig = {
 
 const MISSING_DISCLOSED_VALUE = 'No value was disclosed by the wallet.';
 const MISSING_EXPECTED_VALUE = 'No application value was provided.';
+const NON_BLOCKING_FAILURE_PATTERNS = [
+	/completion email was not sent/i,
+	/backend did not report a completion email/i,
+	/email was not sent by the backend/i,
+];
 const VALIDATION_FIELDS: ValidationFieldConfig[] = [
 	{
 		label: 'Given name',
@@ -87,7 +92,7 @@ export function buildValidationDetails (summary: IrishLifeCaseSummaryLike): Vali
 export function buildFailureReasons (summary: IrishLifeCaseSummaryLike): string[] {
 	const {failureReason, validation} = summary;
 	if (!validation) {
-		return failureReason ? [failureReason] : [];
+		return filterNonBlockingReasons(failureReason ? [failureReason] : []);
 	}
 
 	const reasons = VALIDATION_FIELDS.flatMap((field) => {
@@ -107,7 +112,29 @@ export function buildFailureReasons (summary: IrishLifeCaseSummaryLike): string[
 		reasons.push('The presented PID is expired.');
 	}
 
-	return reasons.length > 0 ? reasons : failureReason ? [failureReason] : [];
+	return reasons.length > 0 ? reasons : filterNonBlockingReasons(failureReason ? [failureReason] : []);
+}
+
+export function hasOnlyNonBlockingFailure (summary: IrishLifeCaseSummaryLike): boolean {
+	const rawReason = typeof summary.failureReason === 'string' ? summary.failureReason.trim() : '';
+	if (!rawReason) {
+		return false;
+	}
+
+	if (filterNonBlockingReasons([rawReason]).length > 0) {
+		return false;
+	}
+
+	const validation = summary.validation;
+	if (!validation) {
+		return false;
+	}
+
+	return validation.matchedGivenName !== false &&
+		validation.matchedFamilyName !== false &&
+		validation.matchedBirthDate !== false &&
+		validation.matchedAddress !== false &&
+		validation.credentialExpired !== true;
 }
 
 export function disclosedClaimPathsFromSummary (summary: IrishLifeCaseSummaryLike): string[] {
@@ -159,4 +186,8 @@ function buildExpiryDetail (
 		expected: 'A current PID credential',
 		actual: displayActual(snapshotValue(snapshot, 'expiry')),
 	}];
+}
+
+function filterNonBlockingReasons (reasons: string[]): string[] {
+	return reasons.filter((reason) => !NON_BLOCKING_FAILURE_PATTERNS.some((pattern) => pattern.test(reason)));
 }
