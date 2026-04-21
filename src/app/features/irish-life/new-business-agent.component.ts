@@ -164,6 +164,7 @@ import {
                   <a [href]="currentCase.customerPortalUrl" target="_blank" rel="noreferrer" class="irish-life-ghost-link inline-link">
                     Open customer page
                   </a>
+                  <p class="qr-panel-case-id"><strong>Case ID:</strong> {{ currentCase.caseId }}</p>
                 </div>
                 <qrcode
                   [qrdata]="currentCase.customerPortalUrl"
@@ -319,6 +320,11 @@ import {
         font-size: 0.96rem;
         line-height: 1.5;
         color: #52617f;
+      }
+
+      .qr-panel-case-id {
+        margin: 0;
+        color: var(--irish-life-ink);
       }
 
       .detail-grid {
