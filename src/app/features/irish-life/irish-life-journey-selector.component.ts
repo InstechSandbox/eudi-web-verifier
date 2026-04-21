@@ -51,7 +51,7 @@ import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-lay
             </a>
           </article>
 
-          <article class="journey-card accent journey-one">
+          <article class="journey-card accent journey-one is-hidden">
             <p class="label">Journey 2</p>
             <h2>New Business customer</h2>
             <p>
@@ -114,6 +114,10 @@ import { WalletLayoutComponent } from '@app/core/layout/wallet-layout/wallet-lay
         box-shadow: 0 18px 48px rgba(24, 52, 95, 0.08);
         position: relative;
         overflow: hidden;
+      }
+
+      .journey-card.is-hidden {
+        display: none;
       }
 
       .journey-card::before {
